@@ -1,0 +1,58 @@
+﻿<Window x:Class="KinectExplorer.DetialWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="主窗口" 
+        ResizeMode="NoResize" WindowStartupLocation="Manual"
+        WindowStyle="None" AllowsTransparency="True"
+        Closing="main_Closing" MouseDown="main_MouseDown">
+    <Window.Background >        
+        <SolidColorBrush x:Name="w_bg" Color="Black"  Opacity="0.6"></SolidColorBrush>
+    </Window.Background>
+    <Grid x:Name="gd" Opacity="0"> 
+        <Grid.RenderTransform>
+            <TransformGroup>
+                <RotateTransform x:Name="rt" CenterX="780" CenterY="480" Angle="0"/>
+                <ScaleTransform x:Name="sct" ScaleX="1" ScaleY="1"/>
+            </TransformGroup>
+        </Grid.RenderTransform>
+    </Grid>
+    
+    <Window.Resources>
+        <Storyboard x:Key="start">
+            <!--<RectAnimation Storyboard.TargetName="r1" Storyboard.TargetProperty="Rect"
+                           Duration="0:0:6" To="0,0,900,900"/>
+            <RectAnimation Storyboard.TargetName="r2" Storyboard.TargetProperty="Rect"
+                           Duration="0:0:5" To="20,20,700,800"/>
+            <RectAnimation Storyboard.TargetName="r3" Storyboard.TargetProperty="Rect"
+                           Duration="0:0:6" To="85,0,850,700"/>
+            <RectAnimation Storyboard.TargetName="r4" Storyboard.TargetProperty="Rect"
+                           Duration="0:0:6" To="0,250,800,700"/>
+            <DoubleAnimation Storyboard.TargetName="gd" Storyboard.TargetProperty="Opacity"
+                             From="0.2" To="1" Duration="0:0:6"/>-->
+            <!--<DoubleAnimation Storyboard.TargetName="gd" Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0" ></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="gd" Storyboard.TargetProperty="Width"
+                             From="500" To="1200" Duration="0:0:2"/>
+            <DoubleAnimation Storyboard.TargetName="gd" Storyboard.TargetProperty="Height"
+                             From="500" To="600" Duration="0:0:2"/>-->
+            <DoubleAnimation Storyboard.TargetName="w_bg" Storyboard.TargetProperty="Opacity"
+                             From="0" To="0.7" Duration="0:0:1"/>
+        </Storyboard>
+        <Storyboard x:Key="middle">
+            <DoubleAnimation Storyboard.TargetName="rt" Storyboard.TargetProperty="Angle"
+                             From="0" To="30" Duration="0:0:4"/>
+        </Storyboard>
+        <Storyboard x:Key="end">
+            <!--<DoubleAnimation Storyboard.TargetName="gd" Storyboard.TargetProperty="Opacity"
+                             Duration="0:0:5" From="1" To="0"/>
+            <DoubleAnimation Storyboard.TargetName="rt" Storyboard.TargetProperty="Angle"
+                             Duration="0:0:5" From="0" To="720"/>
+            <DoubleAnimation Storyboard.TargetName="sct" Storyboard.TargetProperty="ScaleX"
+                             Duration="0:0:5" From="1" To="0.3"/>
+            <DoubleAnimation Storyboard.TargetName="sct" Storyboard.TargetProperty="ScaleY"
+                             Duration="0:0:5" From="1" To="0.1"/>-->
+            <DoubleAnimation Storyboard.TargetName="w_bg" Storyboard.TargetProperty="Opacity"
+                             From="0.7" To="0" Duration="0:0:0.3"/>
+        </Storyboard>
+    </Window.Resources>
+</Window>

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System;
 using System.IO;
@@ -9,6 +10,8 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Fizbin.Kinect.Gestures;
+using Fizbin.Kinect.Gestures.Segments;
 using Microsoft.Kinect;
 using Microsoft.Samples.Kinect.SwipeGestureRecognizer;
 using KinectHelper;
@@ -74,6 +77,7 @@ namespace KinectExplorer
 
         public void LoadImages()
         {
+            //flow.Add();
             //var imageDir = new DirectoryInfo(imagePath);
 
             //images = new List<FileInfo>(imageDir.GetFiles("*.jpg"));
@@ -103,6 +107,10 @@ namespace KinectExplorer
 
 
         #region Kinect 相关变量
+
+
+        private DetialWindow detial;
+
 
         /// <summary>
         /// The recognizer being used.
@@ -173,6 +181,9 @@ namespace KinectExplorer
         private int nearestId = -1;
 
 
+        private CoordinateMapper mapper;
+
+
         #endregion
 
 
@@ -203,6 +214,13 @@ namespace KinectExplorer
             //this.motionHelper = this.CreateMotion();
             // Wire-up window loaded event.
             Loaded += this.Window_Loaded;
+            //var opacityGrid = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0)));
+            //var widthx = new DoubleAnimation(10, SystemParameters.PrimaryScreenWidth / 2, new Duration(TimeSpan.FromMilliseconds(500)));
+            //var heightx = new DoubleAnimation(10, SystemParameters.PrimaryScreenHeight / 2, new Duration(TimeSpan.FromMilliseconds(500)));
+
+            ////this.BeginAnimation(MainWindow.OpacityProperty, opacityGrid);
+            //this.BeginAnimation(MainWindow.WidthProperty, widthx);
+            //this.BeginAnimation(MainWindow.HeightProperty, heightx);
 
         }
 
@@ -220,7 +238,7 @@ namespace KinectExplorer
         /// <param name="sender"></param>
         void flow_CenterCoverClicked(object sender)
         {
-            DetialWindow detial = new DetialWindow(images[currentIndex]);
+            detial = new DetialWindow(images[currentIndex]);
             detial.Show();
         }
 
@@ -303,9 +321,11 @@ namespace KinectExplorer
             {
                 if (e.Skeleton.TrackingId == nearestId)
                 {
-
-                    flow.GoToNext();
-                    HighlightSkeleton(e.Skeleton);
+                    if (detial == null)
+                    {
+                        flow.GoToNext();
+                        HighlightSkeleton(e.Skeleton);
+                    }                   
                 }
             };
 
@@ -314,9 +334,12 @@ namespace KinectExplorer
             {
                 if (e.Skeleton.TrackingId == nearestId)
                 {
-
-                    flow.GoToPrevious();
-                    HighlightSkeleton(e.Skeleton);
+                    if (detial == null)
+                    {
+                        flow.GoToPrevious();
+                        HighlightSkeleton(e.Skeleton);
+                    }
+                    
                 }
             };
 
@@ -336,8 +359,16 @@ namespace KinectExplorer
                 try
                 {
                     this.nui = KinectSensor.KinectSensors[index];
+                   
+                        // initialize the gesture recognizer
+                        gestureController = new GestureController();
+                        gestureController.GestureRecognized += OnGestureRecognized;
 
+                        // register the gestures for this demo
+                        RegisterGestures();
+                    
                     this.nui.Start();
+                    mapper = new CoordinateMapper(nui);
 
                     this.IsDisconnected = false;
                     this.DisconnectedReason = null;
@@ -383,9 +414,12 @@ namespace KinectExplorer
             this.IsDisconnected = true;
             this.DisconnectedReason = null;
         }
-
+        Storyboard stdStart;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+
+            stdStart = (Storyboard)this.Resources["sb_start"];
+            stdStart.Begin();
             // Start the Kinect system, this will cause StatusChanged events to be queued.
             this.InitializeNui();
 
@@ -469,6 +503,34 @@ namespace KinectExplorer
                                 newNearestId = skeleton.TrackingId;
                                 nearestDistance2 = distance2;
                             }
+                            gestureController.UpdateAllGestures(skeleton);
+                            if (detial != null)
+                            {
+                                //if (
+                                //    false)//Math.Abs(skeleton.Joints[JointType.HandLeft].Position.X-skeleton.Joints[JointType.ShoulderLeft].Position.X) <0.2&&
+                                //    //skeleton.Joints[JointType.ElbowLeft].Position.X < skeleton.Joints[JointType.ShoulderLeft].Position.X&&
+                                //    //Math.Abs(skeleton.Joints[JointType.ShoulderLeft].Position.Z-skeleton.Joints[JointType.HandLeft].Position.Z)<0.15)
+                                //    //skeleton.Joints[JointType.HandLeft].Position.Y > skeleton.Joints[JointType.HipCenter].Position.Y)
+                                //    //skeleton.Joints[JointType.HandLeft].Position.X>skeleton.Joints[JointType.ShoulderLeft].Position.X)
+                                //{
+                                //    //detial.SetHandLeftPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandLeft]));
+                                //    //detial.SetHandRightPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandRight]));
+                                //    //detial.allowMove = true;
+                                //}
+                                //else
+                                //{
+                                    //detial.allowMove = false;
+                                    if (CheckIfShowHand(skeleton))
+                                    {
+                                        detial.SetHandLeftPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandLeft]));
+                                    }
+                                    if (CheckIfShowHand(skeleton))
+                                    {
+                                        detial.SetHandRightPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandRight]));
+                                    }
+                                //}
+                                
+                            }
                         }
                     }
 
@@ -478,6 +540,7 @@ namespace KinectExplorer
                     }
 
                     // Pass skeletons to recognizer.
+
                     this.activeRecognizer.Recognize(sender, frame, this.skeletons);
 
                     this.DrawStickMen(this.skeletons);
@@ -591,6 +654,259 @@ namespace KinectExplorer
 
 
 
+
+
+        private GestureController gestureController;
+
+        private void RegisterGestures()
+        {
+            // define the gestures for the demo
+
+            IRelativeGestureSegment[] joinedhandsSegments = new IRelativeGestureSegment[15];
+            JoinedHandsSegment1 joinedhandsSegment = new JoinedHandsSegment1();
+            for (int i = 0; i < 15; i++)
+            {
+                // gesture consists of the same thing 10 times 
+                joinedhandsSegments[i] = joinedhandsSegment;
+            }
+            gestureController.AddGesture("JoinedHands", joinedhandsSegments);
+
+            IRelativeGestureSegment[] menuSegments = new IRelativeGestureSegment[20];
+            MenuSegment1 menuSegment = new MenuSegment1();
+            for (int i = 0; i < 20; i++)
+            {
+                // gesture consists of the same thing 20 times 
+                menuSegments[i] = menuSegment;
+            }
+            gestureController.AddGesture("Menu", menuSegments);
+
+            IRelativeGestureSegment[] swipeleftSegments = new IRelativeGestureSegment[3];
+            swipeleftSegments[0] = new SwipeLeftSegment1();
+            swipeleftSegments[1] = new SwipeLeftSegment2();
+            swipeleftSegments[2] = new SwipeLeftSegment3();
+            gestureController.AddGesture("SwipeLeft", swipeleftSegments);
+
+            IRelativeGestureSegment[] swiperightSegments = new IRelativeGestureSegment[3];
+            swiperightSegments[0] = new SwipeRightSegment1();
+            swiperightSegments[1] = new SwipeRightSegment2();
+            swiperightSegments[2] = new SwipeRightSegment3();
+            gestureController.AddGesture("SwipeRight", swiperightSegments);
+
+            IRelativeGestureSegment[] waveRightSegments = new IRelativeGestureSegment[6];
+            WaveRightSegment1 waveRightSegment1 = new WaveRightSegment1();
+            WaveRightSegment2 waveRightSegment2 = new WaveRightSegment2();
+            waveRightSegments[0] = waveRightSegment1;
+            waveRightSegments[1] = waveRightSegment2;
+            waveRightSegments[2] = waveRightSegment1;
+            waveRightSegments[3] = waveRightSegment2;
+            waveRightSegments[4] = waveRightSegment1;
+            waveRightSegments[5] = waveRightSegment2;
+            gestureController.AddGesture("WaveRight", waveRightSegments);
+
+            IRelativeGestureSegment[] waveLeftSegments = new IRelativeGestureSegment[6];
+            WaveLeftSegment1 waveLeftSegment1 = new WaveLeftSegment1();
+            WaveLeftSegment2 waveLeftSegment2 = new WaveLeftSegment2();
+            waveLeftSegments[0] = waveLeftSegment1;
+            waveLeftSegments[1] = waveLeftSegment2;
+            waveLeftSegments[2] = waveLeftSegment1;
+            waveLeftSegments[3] = waveLeftSegment2;
+            waveLeftSegments[4] = waveLeftSegment1;
+            waveLeftSegments[5] = waveLeftSegment2;
+            gestureController.AddGesture("WaveLeft", waveLeftSegments);
+
+            IRelativeGestureSegment[] zoomInSegments = new IRelativeGestureSegment[3];
+            zoomInSegments[0] = new ZoomSegment1();
+            zoomInSegments[1] = new ZoomSegment2();
+            zoomInSegments[2] = new ZoomSegment3();
+            gestureController.AddGesture("ZoomIn", zoomInSegments);
+
+            IRelativeGestureSegment[] zoomOutSegments = new IRelativeGestureSegment[3];
+            zoomOutSegments[0] = new ZoomSegment3();
+            zoomOutSegments[1] = new ZoomSegment2();
+            zoomOutSegments[2] = new ZoomSegment1();
+            gestureController.AddGesture("ZoomOut", zoomOutSegments);
+
+            IRelativeGestureSegment[] swipeUpSegments = new IRelativeGestureSegment[3];
+            swipeUpSegments[0] = new SwipeUpSegment1();
+            swipeUpSegments[1] = new SwipeUpSegment2();
+            swipeUpSegments[2] = new SwipeUpSegment3();
+            gestureController.AddGesture("SwipeUp", swipeUpSegments);
+
+            IRelativeGestureSegment[] swipeDownSegments = new IRelativeGestureSegment[3];
+            swipeDownSegments[0] = new SwipeDownSegment1();
+            swipeDownSegments[1] = new SwipeDownSegment2();
+            swipeDownSegments[2] = new SwipeDownSegment3();
+            gestureController.AddGesture("SwipeDown", swipeDownSegments);
+
+
+            IRelativeGestureSegment[] swipePullSegment = new IRelativeGestureSegment[2];
+
+            swipePullSegment[0] = new PullAndPush3();
+            swipePullSegment[1] = new PullAndPush4();
+            gestureController.AddGesture("Pull", swipePullSegment);
+
+            IRelativeGestureSegment[] swipePushSegment = new IRelativeGestureSegment[2];
+
+            swipePushSegment[0] = new PullAndPush5();
+            swipePushSegment[1] = new PullAndPush3();
+            gestureController.AddGesture("Push", swipePushSegment);
+
+
+
+            IRelativeGestureSegment[] swipeSurrenderSegment = new IRelativeGestureSegment[5];
+
+            for (int i = 0; i < 5; i++)
+            {
+                swipeSurrenderSegment[i] = new SurrenderSegment1();
+            }
+            gestureController.AddGesture("Surrender", swipePullSegment);
+
+
+        }
+
+
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e">Gesture event arguments.</param>
+        private void OnGestureRecognized(object sender, GestureEventArgs e)
+        {
+            switch (e.GestureName)
+            {
+                case "Menu":
+                    if (detial == null)
+                    {
+                        this.Close();
+                        HighLightStickMan();
+                    }
+                    break;
+                case "WaveRight":
+                    break;
+                case "WaveLeft":
+                    break;
+                case "JoinedHands":
+                    //if (detial == null)
+                    //{
+                    //    HighLightStickMan();
+                    //    this.Close();
+                    //}
+                    //Gesture = "Joined Hands";
+                    break;
+                case "SwipeLeft":
+                    // Gesture = "Swipe Left";
+                    if (detial == null)
+                    {
+                        //flow.GoToNext();
+                    }
+                    break;
+                case "SwipeRight":
+                    //Gesture = "Swipe Right";
+                    if (detial == null)
+                    {
+                        //flow.GoToPrevious();
+                    }                   
+                    break;
+                case "SwipeUp":
+                    // Gesture = "Swipe Up";
+                    break;
+                case "SwipeDown":
+                    //Gesture = "Swipe Down";
+                    break;
+                case "ZoomIn":
+                    //Gesture = "Zoom In";
+                    if (detial == null)
+                    {
+                        HighLightStickMan();
+                        this.Close();
+                    }
+                    break;
+                case "ZoomOut":
+                    //Gesture = "Zoom Out";              
+                    break;
+                case "Pull":
+                    if (detial == null)
+                    {
+                        HighLightStickMan();
+                        detial = new DetialWindow(images[currentIndex]);                      
+                        detial.Show();
+
+                    }    
+                    break;
+                case "Push":
+                    if (detial != null)
+                    {
+                        HighLightStickMan();
+                        detial.CloseThis();
+                        detial = null;                     
+                    }
+                    break;
+                case "Surrender":
+                    //Gesture = "Surrender";
+                    break;
+
+                default:
+                    break;
+            }
+
+            //_clearTimer.Start();
+        }
+
+        private void HighLightStickMan()
+        {
+            for (int i = 0; i < skeletons.Length; i++)
+            {
+                if (skeletons[i].TrackingId == nearestId)
+                    HighlightSkeleton(skeletons[i]);
+            }
+        }
+
+
+        /// <summary>
+        /// 根据显示分辨率与彩色图像帧的分辨率的比例，来调整显示坐标
+        /// </summary>
+        /// <param name="joint"></param>
+        /// <returns></returns>
+        private Point TransferSkeletonPoint(Joint joint)
+        {
+            
+            ColorImagePoint colorPoint = mapper.MapSkeletonPointToColorPoint(joint.Position, nui.ColorStream.Format);
+            double xScaleRate = (SystemParameters.PrimaryScreenWidth) / 640;
+            double yScaleRate = (SystemParameters.PrimaryScreenHeight)/ 480;
+
+            double x = (double)colorPoint.X;
+            x *= xScaleRate;
+            double y = (double)colorPoint.Y;
+            y *= yScaleRate;
+
+            return new Point((int)x,(int)y);
+        }
+
+
+        bool CheckIfShowHand(Skeleton skeleton,JointType jointType)
+        {
+            if (Math.Abs(skeleton.Joints[JointType.Head].Position.Z - skeleton.Joints[jointType].Position.Z) > 0.3&&
+                
+                skeleton.Joints[jointType].Position.Y >skeleton.Joints[JointType.HipCenter].Position.Y-0.1              
+                )
+                return true;
+            return false;
+
+        }
+        bool CheckIfShowHand(Skeleton skeleton)
+        {
+            if (Math.Abs(skeleton.Joints[JointType.Head].Position.Z - skeleton.Joints[JointType.HandLeft].Position.Z) > 0.25 &&
+                Math.Abs(skeleton.Joints[JointType.Head].Position.Z - skeleton.Joints[JointType.HandRight].Position.Z)>0.25&&
+                skeleton.Joints[JointType.HandLeft].Position.Y > skeleton.Joints[JointType.HipCenter].Position.Y - 0.1&&
+                skeleton.Joints[JointType.HandRight].Position.Y > skeleton.Joints[JointType.HipCenter].Position.Y - 0.1
+                )
+                return true;
+            return false;
+
+        }
+       // bool CheckIfControl(Ske)
 
     }
 }

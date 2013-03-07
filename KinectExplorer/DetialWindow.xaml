@@ -4,18 +4,28 @@
         Title="主窗口" 
         ResizeMode="NoResize" WindowStartupLocation="Manual"
         WindowStyle="None" AllowsTransparency="True"
-        Closing="main_Closing" MouseDown="main_MouseDown">
+        Closing="main_Closing" MouseDown="main_MouseDown" BorderBrush="Pink" BorderThickness="0">
     <Window.Background >        
         <SolidColorBrush x:Name="w_bg" Color="Black"  Opacity="0.6"></SolidColorBrush>
     </Window.Background>
-    <Grid x:Name="gd" Opacity="0"> 
-        <Grid.RenderTransform>
-            <TransformGroup>
-                <RotateTransform x:Name="rt" CenterX="780" CenterY="480" Angle="0"/>
-                <ScaleTransform x:Name="sct" ScaleX="1" ScaleY="1"/>
-            </TransformGroup>
-        </Grid.RenderTransform>
+    <Grid >
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="gd" Opacity="0">
+            <Grid.RenderTransform>
+                <TransformGroup>
+                    <RotateTransform x:Name="rt"/>
+                    <ScaleTransform x:Name="sct"/>
+                    <TranslateTransform x:Name="tlt"></TranslateTransform>
+                </TransformGroup>
+            </Grid.RenderTransform>
+            
+
+        </Grid>
+        <Canvas>
+            <Ellipse Visibility="Collapsed" Width="25" Height="25" Fill="Pink" Opacity="0.8" Name="LeftHand"></Ellipse>
+            <Ellipse Width="25" Visibility="Collapsed" Height="25" Fill="Pink" Opacity="0.8" Name="RightHand"></Ellipse>
+        </Canvas>
     </Grid>
+    
     
     <Window.Resources>
         <Storyboard x:Key="start">
@@ -36,11 +46,11 @@
             <DoubleAnimation Storyboard.TargetName="gd" Storyboard.TargetProperty="Height"
                              From="500" To="600" Duration="0:0:2"/>-->
             <DoubleAnimation Storyboard.TargetName="w_bg" Storyboard.TargetProperty="Opacity"
-                             From="0" To="0.7" Duration="0:0:1"/>
+                             From="0" To="0.7" Duration="0:0:0.7"/>
         </Storyboard>
         <Storyboard x:Key="middle">
-            <DoubleAnimation Storyboard.TargetName="rt" Storyboard.TargetProperty="Angle"
-                             From="0" To="30" Duration="0:0:4"/>
+            <DoubleAnimation    Storyboard.TargetName="rt" Storyboard.TargetProperty="Angle"
+                             From="0" To="30" Duration="0:0:0.2"/>
         </Storyboard>
         <Storyboard x:Key="end">
             <!--<DoubleAnimation Storyboard.TargetName="gd" Storyboard.TargetProperty="Opacity"
@@ -52,7 +62,7 @@
             <DoubleAnimation Storyboard.TargetName="sct" Storyboard.TargetProperty="ScaleY"
                              Duration="0:0:5" From="1" To="0.1"/>-->
             <DoubleAnimation Storyboard.TargetName="w_bg" Storyboard.TargetProperty="Opacity"
-                             From="0.7" To="0" Duration="0:0:0.3"/>
+                             From="0.7" To="0" Duration="0:0:0.35"/>
         </Storyboard>
     </Window.Resources>
 </Window>

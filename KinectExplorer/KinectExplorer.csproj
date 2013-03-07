@@ -45,6 +45,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -132,7 +133,11 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\CoverFlowDemo\KinectHelper\KinectHelper.csproj">
+    <ProjectReference Include="..\Fizbin.Kinect.Gestures\Fizbin.Kinect.Gestures.csproj">
+      <Project>{7471719c-9bd5-42ba-b42b-bb5663eebbc3}</Project>
+      <Name>Fizbin.Kinect.Gestures</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\KinectHelper\KinectHelper.csproj">
       <Project>{33206684-b37c-4bf3-864c-fecd00b1cc40}</Project>
       <Name>KinectHelper</Name>
     </ProjectReference>

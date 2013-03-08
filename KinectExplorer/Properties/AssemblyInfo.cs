@@ -8,13 +8,13 @@ using System;
 // Les informations générales relatives à un assembly dépendent de 
 // l'ensemble d'attributs suivant. Changez les valeurs de ces attributs pour modifier les informations
 // associées à un assembly.
-[assembly: AssemblyTitle("Ded.Tutorial.Wpf.CoverFlow.Part7")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("KinectExplorer")]
+[assembly: AssemblyDescription("Picture and mp3 file explorer and player")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("WPF CoverFlow Tutorial")]
+[assembly: AssemblyCompany("jsn")]
+[assembly: AssemblyProduct("Kinect Explorer")]
 [assembly: AssemblyCopyright("Copyright © ded' 2008")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyTrademark("@jsn")]
 [assembly: AssemblyCulture("")]
 
 // L'affectation de la valeur false à ComVisible rend les types invisibles dans cet assembly 

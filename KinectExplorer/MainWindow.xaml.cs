@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System;
 using System.IO;
@@ -10,11 +10,16 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using DoubanFM.Bass;
 using Fizbin.Kinect.Gestures;
 using Fizbin.Kinect.Gestures.Segments;
+using ID3;
 using Microsoft.Kinect;
 using Microsoft.Samples.Kinect.SwipeGestureRecognizer;
-using KinectHelper;
+using Brush = System.Windows.Media.Brush;
+using Brushes = System.Windows.Media.Brushes;
+using Image = System.Windows.Controls.Image;
+using Point = System.Windows.Point;
 
 namespace KinectExplorer
 {
@@ -51,7 +56,7 @@ namespace KinectExplorer
                     flow.GoToPreviousPage();
                     break;
                 case Key.Escape:
-                    this.Close();
+                    CloseThis();
                     break;
             }
             if (flow.Index != Convert.ToInt32(slider.Value))
@@ -75,17 +80,10 @@ namespace KinectExplorer
         private List<FileInfo> images;
         private int currentIndex = 0;
 
+        DirectoryInfo myMusicDir, myCoverDir, myLyricDir;
+
         public void LoadImages()
         {
-            //flow.Add();
-            //var imageDir = new DirectoryInfo(imagePath);
-
-            //images = new List<FileInfo>(imageDir.GetFiles("*.jpg"));
-            //var images2 = new List<FileInfo>(imageDir.GetFiles("*.png"));
-            //images.AddRange(images2);
-            //images.Sort(new FileInfoComparer());
-            //foreach (FileInfo f in images)
-            //    flow.Add(Environment.MachineName, f.FullName);
 
             images = new List<FileInfo>();
 
@@ -98,6 +96,41 @@ namespace KinectExplorer
             images.AddRange(myPicturesDir.GetFiles("*.jpg", SearchOption.AllDirectories));
             images.AddRange(myPicturesDir.GetFiles("*.png", SearchOption.AllDirectories));
 
+            myMusicDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic));
+            myCoverDir = new DirectoryInfo(myMusicDir.FullName + @"\Covers\");
+            if (!myCoverDir.Exists)
+            {
+                myCoverDir.Create();
+            }
+            myLyricDir = new DirectoryInfo(myMusicDir.FullName + @"\Lyrics\");
+            if (!myLyricDir.Exists)
+            {
+                myLyricDir.Create();
+            }
+            FileInfo[] musics = myMusicDir.GetFiles("*.mp3");
+
+            foreach (var music in musics)
+            {
+                string cover = myCoverDir + @"\" + System.IO.Path.GetFileNameWithoutExtension(music.FullName) + ".jpg";
+                if (!File.Exists(cover))
+                {
+                    ID3Info info = new ID3Info(music.FullName, true);//从ID3V2信息中读取封面
+                    info.Load();
+                    if (info.ID3v2Info.HaveTag && info.ID3v2Info.AttachedPictureFrames.Items.Length > 0)
+                    {
+                        MemoryStream ms = info.ID3v2Info.AttachedPictureFrames.Items[0].Data;
+                        System.Drawing.Image img = Bitmap.FromStream(ms);
+                        img.Save(cover, System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                    }
+                    else
+                    {
+                        File.Copy(System.Environment.CurrentDirectory + @"\cover.jpg", cover, true);
+                    }
+                }
+                images.Add(new FileInfo(cover));
+            }
+
             images.Sort(new FileInfoComparer());
             foreach (FileInfo f in images)
                 flow.Add(Environment.MachineName, f.FullName);
@@ -109,8 +142,8 @@ namespace KinectExplorer
         #region Kinect 相关变量
 
 
-        private DetialWindow detial;
-
+        private DetialWindow detialWindow;
+        private MusicWindow musicWindow;
 
         /// <summary>
         /// The recognizer being used.
@@ -182,10 +215,9 @@ namespace KinectExplorer
 
 
         private CoordinateMapper mapper;
-
-
+        private Storyboard stdStart, stdEnd;
+        private GestureController gestureController;
         #endregion
-
 
 
         public MainWindow()
@@ -195,25 +227,24 @@ namespace KinectExplorer
             this.Height = SystemParameters.PrimaryScreenHeight;
             this.Top = 0;
             this.Left = 0;
-            //this.Topmost = true;
+
             flow.Width = this.Width;
             flow.Height = this.Height;
             flow.IndexChanged += flow_IndexChanged;
             flow.CenterCoverClicked += flow_CenterCoverClicked;
-            // flow.GoToNextPage();
+
             flow.Cache = new ThumbnailManager();
             LoadImages();
-            //Load(@"C:\Users\Administrator\Desktop\CoverFlowDemo\CoverFlowDemo\bin\Debug\Pictures");
+
             slider.Minimum = 0;
             slider.Maximum = flow.Count - 1;
 
 
-
             // Create the gesture recognizer.
             this.activeRecognizer = this.CreateRecognizer();
-            //this.motionHelper = this.CreateMotion();
             // Wire-up window loaded event.
             Loaded += this.Window_Loaded;
+
             //var opacityGrid = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0)));
             //var widthx = new DoubleAnimation(10, SystemParameters.PrimaryScreenWidth / 2, new Duration(TimeSpan.FromMilliseconds(500)));
             //var heightx = new DoubleAnimation(10, SystemParameters.PrimaryScreenHeight / 2, new Duration(TimeSpan.FromMilliseconds(500)));
@@ -221,15 +252,43 @@ namespace KinectExplorer
             ////this.BeginAnimation(MainWindow.OpacityProperty, opacityGrid);
             //this.BeginAnimation(MainWindow.WidthProperty, widthx);
             //this.BeginAnimation(MainWindow.HeightProperty, heightx);
-
         }
 
-        private MotionHelper CreateMotion()
+
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+
+            stdStart = (Storyboard)this.Resources["sb_start"];
+            stdStart.Begin();
+
+            InitBassEngine();//初始化播放器
+
+            ChangeFileInfo();//显示文件信息
+
+            // Start the Kinect system, this will cause StatusChanged events to be queued.
+            this.InitializeNui();
+
+            // Handle StatusChange events to pick the first sensor that connects.
+            KinectSensor.KinectSensors.StatusChanged += (s, ee) =>
+            {
+                switch (ee.Status)
+                {
+                    case KinectStatus.Connected:
+                        if (nui == null)
+                        {
+                            InitializeNui();
+                        }
+                        break;
+                    default:
+                        if (ee.Sensor == nui)
+                        {
+                            UninitializeNui();
+                        }
+                        break;
+                }
+            };
         }
-
-
 
 
         /// <summary>
@@ -238,9 +297,49 @@ namespace KinectExplorer
         /// <param name="sender"></param>
         void flow_CenterCoverClicked(object sender)
         {
-            detial = new DetialWindow(images[currentIndex]);
-            detial.Show();
+            OpenSubWindow();
         }
+
+
+        /// <summary>
+        /// 打开图片展示或者音乐播放窗口
+        /// </summary>
+        private void OpenSubWindow()
+        {
+            string path = CheckIfMusicPath(currentIndex);
+            if (path != "")
+            {
+                ID3Info id3Info = new ID3Info(path, true);
+                id3Info.Load();
+                BassEngine.Instance.OpenFile(path);
+                musicWindow = new MusicWindow(images[currentIndex], id3Info);
+                musicWindow.Show();
+            }
+            else
+            {
+                detialWindow = new DetialWindow(images[currentIndex]);
+                detialWindow.Show();
+            }
+        }
+
+
+        /// <summary>
+        /// 检查点击的Cover是否是音乐文件
+        /// </summary>
+        /// <param name="currentIndex"></param>
+        /// <returns></returns>
+        private string CheckIfMusicPath(int currentIndex)
+        {
+            string path = myMusicDir.FullName + @"\" +
+                          System.IO.Path.GetFileNameWithoutExtension(images[currentIndex].FullName) + ".mp3";
+            if (File.Exists(path))
+                return path;
+            else
+            {
+                return "";
+            }
+        }
+
 
         /// <summary>
         /// 中间的Cover发生变化
@@ -250,6 +349,16 @@ namespace KinectExplorer
         void flow_IndexChanged(object sender, int e)
         {
             currentIndex = e;
+            ChangeFileInfo();
+        }
+
+        /// <summary>
+        /// 显示文件信息
+        /// </summary>
+        private void ChangeFileInfo()
+        {
+            string path = CheckIfMusicPath(currentIndex);
+            fileInfo.Text = path != "" ? new FileInfo(path).Name : images[currentIndex].Name;
             if (flow.Index != Convert.ToInt32(slider.Value))
                 slider.Value = flow.Index;
         }
@@ -266,7 +375,6 @@ namespace KinectExplorer
             {
                 return this.isDisconnectedField;
             }
-
             private set
             {
                 if (this.isDisconnectedField != value)
@@ -321,11 +429,18 @@ namespace KinectExplorer
             {
                 if (e.Skeleton.TrackingId == nearestId)
                 {
-                    if (detial == null)
+                    if (detialWindow == null)
                     {
-                        flow.GoToNext();
                         HighlightSkeleton(e.Skeleton);
-                    }                   
+                        if (musicWindow != null)
+                        {
+                            musicWindow.Backword();
+                        }
+                        else
+                        {
+                            flow.GoToNext();
+                        }
+                    }
                 }
             };
 
@@ -334,15 +449,20 @@ namespace KinectExplorer
             {
                 if (e.Skeleton.TrackingId == nearestId)
                 {
-                    if (detial == null)
+                    if (detialWindow == null)
                     {
-                        flow.GoToPrevious();
                         HighlightSkeleton(e.Skeleton);
+                        if (musicWindow != null)
+                        {
+                            musicWindow.Forword();
+                        }
+                        else
+                        {
+                            flow.GoToPrevious();
+                        }
                     }
-                    
                 }
             };
-
             return recognizer;
         }
 
@@ -359,14 +479,14 @@ namespace KinectExplorer
                 try
                 {
                     this.nui = KinectSensor.KinectSensors[index];
-                   
-                        // initialize the gesture recognizer
-                        gestureController = new GestureController();
-                        gestureController.GestureRecognized += OnGestureRecognized;
 
-                        // register the gestures for this demo
-                        RegisterGestures();
-                    
+                    // initialize the gesture recognizer
+                    gestureController = new GestureController();
+                    gestureController.GestureRecognized += OnGestureRecognized;
+
+                    // register the gestures for this demo
+                    RegisterGestures();
+
                     this.nui.Start();
                     mapper = new CoordinateMapper(nui);
 
@@ -410,52 +530,46 @@ namespace KinectExplorer
 
                 this.nui = null;
             }
-
             this.IsDisconnected = true;
             this.DisconnectedReason = null;
         }
-        Storyboard stdStart;
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+
+
+        /// <summary>
+        /// 初始化播放器
+        /// </summary>
+        private void InitBassEngine()
         {
-
-            stdStart = (Storyboard)this.Resources["sb_start"];
-            stdStart.Begin();
-            // Start the Kinect system, this will cause StatusChanged events to be queued.
-            this.InitializeNui();
-
-            // Handle StatusChange events to pick the first sensor that connects.
-            KinectSensor.KinectSensors.StatusChanged += (s, ee) =>
+            //歌曲播放完毕
+            //SpectrumAnalyzer.RegisterSoundPlayer(BassEngine.Instance);
+            BassEngine.ExplicitInitialize(null);
+            BassEngine.Instance.TrackEnded += delegate
             {
-                switch (ee.Status)
+                if (musicWindow != null)
                 {
-                    case KinectStatus.Connected:
-                        if (nui == null)
-                        {
-                            Debug.WriteLine("New Kinect connected");
-
-                            InitializeNui();
-                        }
-                        else
-                        {
-                            Debug.WriteLine("Existing Kinect signalled connection");
-                        }
-
-                        break;
-                    default:
-                        if (ee.Sensor == nui)
-                        {
-                            Debug.WriteLine("Existing Kinect disconnected");
-
-                            UninitializeNui();
-                        }
-                        else
-                        {
-                            Debug.WriteLine("Other Kinect event occurred");
-                        }
-
-                        break;
+                    musicWindow.CloseThis();
+                    musicWindow = null;
                 }
             };
+            //音乐加载成功
+            BassEngine.Instance.OpenSucceeded += delegate
+            {
+                Debug.WriteLine(" 音乐加载成功");
+                BassEngine.Instance.Volume = 1;
+                BassEngine.Instance.Play();
+
+            };
+            //打开音乐失败
+            BassEngine.Instance.OpenFailed += delegate
+            {
+                if (musicWindow != null)
+                {
+                    musicWindow.CloseThis();
+                    musicWindow = null;
+                }
+            };
+
+            //绑定音量设置
         }
 
 
@@ -504,7 +618,7 @@ namespace KinectExplorer
                                 nearestDistance2 = distance2;
                             }
                             gestureController.UpdateAllGestures(skeleton);
-                            if (detial != null)
+                            if (detialWindow != null)
                             {
                                 //if (
                                 //    false)//Math.Abs(skeleton.Joints[JointType.HandLeft].Position.X-skeleton.Joints[JointType.ShoulderLeft].Position.X) <0.2&&
@@ -513,23 +627,23 @@ namespace KinectExplorer
                                 //    //skeleton.Joints[JointType.HandLeft].Position.Y > skeleton.Joints[JointType.HipCenter].Position.Y)
                                 //    //skeleton.Joints[JointType.HandLeft].Position.X>skeleton.Joints[JointType.ShoulderLeft].Position.X)
                                 //{
-                                //    //detial.SetHandLeftPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandLeft]));
-                                //    //detial.SetHandRightPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandRight]));
-                                //    //detial.allowMove = true;
+                                //    //detialWindow.SetHandLeftPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandLeft]));
+                                //    //detialWindow.SetHandRightPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandRight]));
+                                //    //detialWindow.allowMove = true;
                                 //}
                                 //else
                                 //{
-                                    //detial.allowMove = false;
-                                    if (CheckIfShowHand(skeleton))
-                                    {
-                                        detial.SetHandLeftPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandLeft]));
-                                    }
-                                    if (CheckIfShowHand(skeleton))
-                                    {
-                                        detial.SetHandRightPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandRight]));
-                                    }
+                                //detialWindow.allowMove = false;
+                                if (CheckIfShowHand(skeleton))
+                                {
+                                    detialWindow.SetHandLeftPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandLeft]));
+                                }
+                                if (CheckIfShowHand(skeleton))
+                                {
+                                    detialWindow.SetHandRightPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandRight]));
+                                }
                                 //}
-                                
+
                             }
                         }
                     }
@@ -653,66 +767,27 @@ namespace KinectExplorer
 
 
 
-
-
-
-        private GestureController gestureController;
-
         private void RegisterGestures()
         {
             // define the gestures for the demo
 
-            IRelativeGestureSegment[] joinedhandsSegments = new IRelativeGestureSegment[15];
+            IRelativeGestureSegment[] joinedhandsSegments = new IRelativeGestureSegment[20];
             JoinedHandsSegment1 joinedhandsSegment = new JoinedHandsSegment1();
-            for (int i = 0; i < 15; i++)
+            for (int i = 0; i < 20; i++)
             {
                 // gesture consists of the same thing 10 times 
                 joinedhandsSegments[i] = joinedhandsSegment;
             }
             gestureController.AddGesture("JoinedHands", joinedhandsSegments);
 
-            IRelativeGestureSegment[] menuSegments = new IRelativeGestureSegment[20];
+            IRelativeGestureSegment[] menuSegments = new IRelativeGestureSegment[15];
             MenuSegment1 menuSegment = new MenuSegment1();
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 15; i++)
             {
                 // gesture consists of the same thing 20 times 
                 menuSegments[i] = menuSegment;
             }
             gestureController.AddGesture("Menu", menuSegments);
-
-            IRelativeGestureSegment[] swipeleftSegments = new IRelativeGestureSegment[3];
-            swipeleftSegments[0] = new SwipeLeftSegment1();
-            swipeleftSegments[1] = new SwipeLeftSegment2();
-            swipeleftSegments[2] = new SwipeLeftSegment3();
-            gestureController.AddGesture("SwipeLeft", swipeleftSegments);
-
-            IRelativeGestureSegment[] swiperightSegments = new IRelativeGestureSegment[3];
-            swiperightSegments[0] = new SwipeRightSegment1();
-            swiperightSegments[1] = new SwipeRightSegment2();
-            swiperightSegments[2] = new SwipeRightSegment3();
-            gestureController.AddGesture("SwipeRight", swiperightSegments);
-
-            IRelativeGestureSegment[] waveRightSegments = new IRelativeGestureSegment[6];
-            WaveRightSegment1 waveRightSegment1 = new WaveRightSegment1();
-            WaveRightSegment2 waveRightSegment2 = new WaveRightSegment2();
-            waveRightSegments[0] = waveRightSegment1;
-            waveRightSegments[1] = waveRightSegment2;
-            waveRightSegments[2] = waveRightSegment1;
-            waveRightSegments[3] = waveRightSegment2;
-            waveRightSegments[4] = waveRightSegment1;
-            waveRightSegments[5] = waveRightSegment2;
-            gestureController.AddGesture("WaveRight", waveRightSegments);
-
-            IRelativeGestureSegment[] waveLeftSegments = new IRelativeGestureSegment[6];
-            WaveLeftSegment1 waveLeftSegment1 = new WaveLeftSegment1();
-            WaveLeftSegment2 waveLeftSegment2 = new WaveLeftSegment2();
-            waveLeftSegments[0] = waveLeftSegment1;
-            waveLeftSegments[1] = waveLeftSegment2;
-            waveLeftSegments[2] = waveLeftSegment1;
-            waveLeftSegments[3] = waveLeftSegment2;
-            waveLeftSegments[4] = waveLeftSegment1;
-            waveLeftSegments[5] = waveLeftSegment2;
-            gestureController.AddGesture("WaveLeft", waveLeftSegments);
 
             IRelativeGestureSegment[] zoomInSegments = new IRelativeGestureSegment[3];
             zoomInSegments[0] = new ZoomSegment1();
@@ -726,41 +801,26 @@ namespace KinectExplorer
             zoomOutSegments[2] = new ZoomSegment1();
             gestureController.AddGesture("ZoomOut", zoomOutSegments);
 
-            IRelativeGestureSegment[] swipeUpSegments = new IRelativeGestureSegment[3];
-            swipeUpSegments[0] = new SwipeUpSegment1();
-            swipeUpSegments[1] = new SwipeUpSegment2();
-            swipeUpSegments[2] = new SwipeUpSegment3();
-            gestureController.AddGesture("SwipeUp", swipeUpSegments);
+            IRelativeGestureSegment[] pullSegment = new IRelativeGestureSegment[2];
+            pullSegment[0] = new PullAndPush3();
+            pullSegment[1] = new PullAndPush4();
+            gestureController.AddGesture("Pull", pullSegment);
 
-            IRelativeGestureSegment[] swipeDownSegments = new IRelativeGestureSegment[3];
-            swipeDownSegments[0] = new SwipeDownSegment1();
-            swipeDownSegments[1] = new SwipeDownSegment2();
-            swipeDownSegments[2] = new SwipeDownSegment3();
-            gestureController.AddGesture("SwipeDown", swipeDownSegments);
+            IRelativeGestureSegment[] pushSegment = new IRelativeGestureSegment[2];
+            pushSegment[0] = new PullAndPush5();
+            pushSegment[1] = new PullAndPush3();
+            gestureController.AddGesture("Push", pushSegment);
 
 
-            IRelativeGestureSegment[] swipePullSegment = new IRelativeGestureSegment[2];
+            IRelativeGestureSegment[] pullLeftSegment = new IRelativeGestureSegment[2];
+            pullLeftSegment[0] = new PullAndPush6();
+            pullLeftSegment[1] = new PullAndPush7();
+            gestureController.AddGesture("PullLeft", pullLeftSegment);
 
-            swipePullSegment[0] = new PullAndPush3();
-            swipePullSegment[1] = new PullAndPush4();
-            gestureController.AddGesture("Pull", swipePullSegment);
-
-            IRelativeGestureSegment[] swipePushSegment = new IRelativeGestureSegment[2];
-
-            swipePushSegment[0] = new PullAndPush5();
-            swipePushSegment[1] = new PullAndPush3();
-            gestureController.AddGesture("Push", swipePushSegment);
-
-
-
-            IRelativeGestureSegment[] swipeSurrenderSegment = new IRelativeGestureSegment[5];
-
-            for (int i = 0; i < 5; i++)
-            {
-                swipeSurrenderSegment[i] = new SurrenderSegment1();
-            }
-            gestureController.AddGesture("Surrender", swipePullSegment);
-
+            IRelativeGestureSegment[] pushLeftSegment = new IRelativeGestureSegment[2];
+            pushLeftSegment[0] = new PullAndPush8();
+            pushLeftSegment[1] = new PullAndPush6();
+            gestureController.AddGesture("PushLeft", pushLeftSegment);
 
         }
 
@@ -777,47 +837,22 @@ namespace KinectExplorer
             switch (e.GestureName)
             {
                 case "Menu":
-                    if (detial == null)
+                    if (detialWindow == null && musicWindow == null)
                     {
-                        this.Close();
                         HighLightStickMan();
+                        this.CloseThis();                       
                     }
-                    break;
-                case "WaveRight":
-                    break;
-                case "WaveLeft":
                     break;
                 case "JoinedHands":
-                    //if (detial == null)
-                    //{
-                    //    HighLightStickMan();
-                    //    this.Close();
-                    //}
-                    //Gesture = "Joined Hands";
-                    break;
-                case "SwipeLeft":
-                    // Gesture = "Swipe Left";
-                    if (detial == null)
+                    if (musicWindow != null && detialWindow == null)
                     {
-                        //flow.GoToNext();
+                        HighLightStickMan();
+                        musicWindow.ChangeStatue();
                     }
-                    break;
-                case "SwipeRight":
-                    //Gesture = "Swipe Right";
-                    if (detial == null)
-                    {
-                        //flow.GoToPrevious();
-                    }                   
-                    break;
-                case "SwipeUp":
-                    // Gesture = "Swipe Up";
-                    break;
-                case "SwipeDown":
-                    //Gesture = "Swipe Down";
                     break;
                 case "ZoomIn":
                     //Gesture = "Zoom In";
-                    if (detial == null)
+                    if (detialWindow == null && musicWindow == null)
                     {
                         HighLightStickMan();
                         this.Close();
@@ -827,26 +862,30 @@ namespace KinectExplorer
                     //Gesture = "Zoom Out";              
                     break;
                 case "Pull":
-                    if (detial == null)
+                case "PullLeft":
+                    if (detialWindow == null && musicWindow == null)
                     {
                         HighLightStickMan();
-                        detial = new DetialWindow(images[currentIndex]);                      
-                        detial.Show();
-
-                    }    
-                    break;
-                case "Push":
-                    if (detial != null)
-                    {
-                        HighLightStickMan();
-                        detial.CloseThis();
-                        detial = null;                     
+                        OpenSubWindow();
                     }
                     break;
-                case "Surrender":
-                    //Gesture = "Surrender";
+                case "Push":
+                case "PushLeft":
+                    if (detialWindow != null || musicWindow != null)
+                    {
+                        HighLightStickMan();
+                        if (detialWindow != null)
+                        {
+                            detialWindow.CloseThis();
+                            detialWindow = null;
+                        }
+                        else
+                        {
+                            musicWindow.CloseThis();
+                            musicWindow = null;
+                        }
+                    }
                     break;
-
                 default:
                     break;
             }
@@ -871,25 +910,25 @@ namespace KinectExplorer
         /// <returns></returns>
         private Point TransferSkeletonPoint(Joint joint)
         {
-            
+
             ColorImagePoint colorPoint = mapper.MapSkeletonPointToColorPoint(joint.Position, nui.ColorStream.Format);
             double xScaleRate = (SystemParameters.PrimaryScreenWidth) / 640;
-            double yScaleRate = (SystemParameters.PrimaryScreenHeight)/ 480;
+            double yScaleRate = (SystemParameters.PrimaryScreenHeight) / 480;
 
             double x = (double)colorPoint.X;
             x *= xScaleRate;
             double y = (double)colorPoint.Y;
             y *= yScaleRate;
 
-            return new Point((int)x,(int)y);
+            return new Point((int)x, (int)y);
         }
 
 
-        bool CheckIfShowHand(Skeleton skeleton,JointType jointType)
+        bool CheckIfShowHand(Skeleton skeleton, JointType jointType)
         {
-            if (Math.Abs(skeleton.Joints[JointType.Head].Position.Z - skeleton.Joints[jointType].Position.Z) > 0.3&&
-                
-                skeleton.Joints[jointType].Position.Y >skeleton.Joints[JointType.HipCenter].Position.Y-0.1              
+            if (Math.Abs(skeleton.Joints[JointType.Head].Position.Z - skeleton.Joints[jointType].Position.Z) > 0.3 &&
+
+                skeleton.Joints[jointType].Position.Y > skeleton.Joints[JointType.HipCenter].Position.Y - 0.1
                 )
                 return true;
             return false;
@@ -897,16 +936,38 @@ namespace KinectExplorer
         }
         bool CheckIfShowHand(Skeleton skeleton)
         {
-            if (Math.Abs(skeleton.Joints[JointType.Head].Position.Z - skeleton.Joints[JointType.HandLeft].Position.Z) > 0.25 &&
-                Math.Abs(skeleton.Joints[JointType.Head].Position.Z - skeleton.Joints[JointType.HandRight].Position.Z)>0.25&&
-                skeleton.Joints[JointType.HandLeft].Position.Y > skeleton.Joints[JointType.HipCenter].Position.Y - 0.1&&
+            if (Math.Abs(skeleton.Joints[JointType.Head].Position.Z - skeleton.Joints[JointType.HandLeft].Position.Z) >
+                0.25 &&
+                Math.Abs(skeleton.Joints[JointType.Head].Position.Z - skeleton.Joints[JointType.HandRight].Position.Z) >
+                0.25 &&
+                skeleton.Joints[JointType.HandLeft].Position.Y > skeleton.Joints[JointType.HipCenter].Position.Y - 0.1 &&
                 skeleton.Joints[JointType.HandRight].Position.Y > skeleton.Joints[JointType.HipCenter].Position.Y - 0.1
+
                 )
+            {
+                HighLightStickMan();
                 return true;
+            }
             return false;
 
         }
-       // bool CheckIfControl(Ske)
+
+
+
+        private void CloseThis()
+        {
+            stdEnd = (Storyboard)this.Resources["sb_end"];
+            stdEnd.Completed += (a, b) =>
+                {
+                    this.Close();
+                };
+            stdEnd.Begin();
+            //var datWth = new DoubleAnimation(SystemParameters.PrimaryScreenWidth, 1, new Duration(TimeSpan.FromMilliseconds(700)));
+            //var datHig = new DoubleAnimation(SystemParameters.FullPrimaryScreenHeight, 1, new Duration(TimeSpan.FromMilliseconds(700)));
+
+            //this.BeginAnimation(MainWindow.WidthProperty, datWth);
+            //this.BeginAnimation(MainWindow.HeightProperty, datHig);
+        }
 
     }
 }

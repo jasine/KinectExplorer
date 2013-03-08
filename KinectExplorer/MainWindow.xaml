@@ -4,9 +4,10 @@
     Title="WPF Coverflow" KeyDown="Window_KeyDown" Name="main"
     
     xmlns:flow="clr-namespace:FlowComponent;assembly=FlowComponent"
-        xmlns:flowComponent="clr-namespace:FlowComponent;assembly=FlowComponent" AllowsTransparency="True" WindowStyle="None" Loaded="Window_Loaded">
+        xmlns:flowComponent="clr-namespace:FlowComponent;assembly=FlowComponent" AllowsTransparency="True" WindowStyle="None" Loaded="Window_Loaded" Icon="6.ico">
   <Grid>
-    <flowComponent:FlowControl x:Name="flow" Margin="0" Width="500" Height="300"></flowComponent:FlowControl>
+    <flowComponent:FlowControl x:Name="flow" Margin="0" Width="500" Height="300"> </flowComponent:FlowControl>
+     <TextBlock Name="fileInfo" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,50" FontSize="25" Foreground="White"></TextBlock>
     <Slider Height="20" Margin="33,0,33,12" Name="slider" VerticalAlignment="Bottom" ValueChanged="slider_ValueChanged" Focusable="False" />
         <Canvas x:Name="StickMen" Width="200" Height="150" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
     </Grid>
@@ -14,6 +15,9 @@
         <Storyboard x:Key="sb_start">
             <DoubleAnimation Storyboard.TargetName="main" Storyboard.TargetProperty="Opacity"
                              From="0" To="1" Duration="0:0:1.5"/>
+        </Storyboard>
+        <Storyboard x:Key="sb_end">
+            <DoubleAnimation From="1" To="0" Storyboard.TargetName="main" Storyboard.TargetProperty="Opacity" Duration="00:00:0.7"></DoubleAnimation>
         </Storyboard>
     </Window.Resources>
 </Window>

@@ -290,7 +290,7 @@ namespace KinectExplorer
         {
             playStatue.Opacity = 0;
             timerLyric.Stop();
-            timerLyric = null;
+            //timerLyric = null;
             lyric.Text = "";
             var datImg = new DoubleAnimation(-1 * SystemParameters.PrimaryScreenWidth * 0.2, 0, new Duration(TimeSpan.FromMilliseconds(700)));
             var datInfo = new DoubleAnimation(SystemParameters.PrimaryScreenWidth * 0.2, 0, new Duration(TimeSpan.FromMilliseconds(700)));
@@ -369,7 +369,7 @@ namespace KinectExplorer
 
         private void gd_MouseEnter(object sender, MouseEventArgs e)
         {
-            if (BassEngine.Instance.ChannelPosition.Seconds >= 1 && timerLyric != null)
+            if (BassEngine.Instance.ChannelPosition.Seconds >= 1)
             {
                 Visibility vi = gd.Visibility;
                 //var opacityImg = new DoubleAnimation(07, 0, new Duration(TimeSpan.FromSeconds(1000)));

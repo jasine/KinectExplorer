@@ -6,8 +6,16 @@
     xmlns:flow="clr-namespace:FlowComponent;assembly=FlowComponent"
         xmlns:flowComponent="clr-namespace:FlowComponent;assembly=FlowComponent" AllowsTransparency="True" WindowStyle="None" Loaded="Window_Loaded" Icon="6.ico">
   <Grid>
-    <flowComponent:FlowControl x:Name="flow" Margin="0" Width="500" Height="300"> </flowComponent:FlowControl>
-     <TextBlock Name="fileInfo" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,50" FontSize="25" Foreground="White"></TextBlock>
+    <flowComponent:FlowControl x:Name="flow" Margin="0" Width="500" Height="300">
+        
+    </flowComponent:FlowControl>
+      
+      <Grid Height="30" Margin="0,0,0,50" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+            <TextBlock Name="fileInfo"  HorizontalAlignment="Center" Margin="8,0,8,2" VerticalAlignment="Center" FontSize="25" Foreground="White">
+            
+            </TextBlock>
+          <Border BorderBrush="White" BorderThickness="2" Background="White" Opacity="0.25" CornerRadius="13"></Border>
+        </Grid>
     <Slider Height="20" Margin="33,0,33,12" Name="slider" VerticalAlignment="Bottom" ValueChanged="slider_ValueChanged" Focusable="False" />
         <Canvas x:Name="StickMen" Width="200" Height="150" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
     </Grid>

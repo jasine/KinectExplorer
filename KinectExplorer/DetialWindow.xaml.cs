@@ -18,27 +18,30 @@ namespace KinectExplorer
         private ImageSource img;
         private double size, w, h;
         Storyboard stdStart, stdEnd, stdMiddle;
-        //private Point lastCenter;
+
+        private double angleYLast = 0;
         private double lastTimesX = 1;
         private Point gdCenter;
 
-        private Point leftHand, rightHand, leftHandLast, rightHandLast;
-        private DispatcherTimer timer;
-
-
+        private Point leftHand, rightHand,leftHandLast,rightHandLast;
+        private bool allowTrans = true;
+        public DispatcherTimer timerTrans;
+        private bool allowTic=true;
+        public Point heapCenter;
 
         public DetialWindow(FileInfo imgSrc)
         {
             InitializeComponent();
+            gdCenter = new Point(0, 0);
+
+
             this.Width = SystemParameters.PrimaryScreenWidth;
             this.Height = SystemParameters.PrimaryScreenHeight;
             this.Left = 0;
-            this.Top = 0;
-            // this.Topmost = true;
-            gdCenter=new Point(0,0);
-
+            this.Top = 0;                     
             img = new BitmapImage(new Uri(imgSrc.FullName));
 
+            // this.Topmost = true;
             //根据分辨率不同，调整DetialWindow出现的位置
             if (this.Width > 1300)
             {
@@ -68,73 +71,11 @@ namespace KinectExplorer
             stdStart.Completed += (a, b) =>
             {
                 //stdMiddle.Begin();   
-                timer = new DispatcherTimer();
-                timer.Interval = TimeSpan.FromMilliseconds(200);
-                timer.Tick += (c, d) =>
-                    {
-                        double lX = Canvas.GetLeft(LeftHand) + LeftHand.ActualWidth / 2;
-                        double lY = Canvas.GetTop(LeftHand) + LeftHand.ActualHeight / 2;
-                        double rX = Canvas.GetLeft(RightHand) + RightHand.ActualWidth / 2;
-                        double rY = Canvas.GetTop(RightHand) + RightHand.ActualHeight / 2;
-                        double centerX = (rX - lX) / 2 + lX;
-                        double centerY = (rY - lY) / 2 + lY;
-                      
-                        double lenY = rX-lX;
-                        double timesX = lenY / gd.ActualWidth ;
-                        timesX = timesX*timesX*2;
-
-                        //double timesX = Math.Abs(rightHand.X - leftHand.X) / 300;
-
-                        double angleY = Math.Atan((rightHand.Y - leftHand.Y) / (rightHand.X - leftHand.X)) * 180 / Math.PI;
-                        double angleYLast = Math.Atan((rightHandLast.Y - leftHandLast.Y) / (rightHandLast.X - leftHandLast.X)) * 180 / Math.PI;
-
-
-
-                        leftHandLast = leftHand;
-                        rightHandLast = rightHand;
-
-
-                        if (double.IsInfinity(timesX) || double.IsNaN(timesX) ||
-                            leftHandLast.X == 0 || rightHandLast.X == 0 ||
-                            double.IsNaN(angleYLast) || Math.Abs(angleY - angleYLast) < 1.5)
-                            return;
-                        //timesX = Math.Sqrt(timesX);
-
-                        //if (Math.Abs(timesX - lastTimesX) > 0.2)
-                        //{
-                        var das1 = new DoubleAnimation(lastTimesX, timesX, new Duration(TimeSpan.FromMilliseconds(200)));
-                        var das2 = new DoubleAnimation(lastTimesX, timesX, new Duration(TimeSpan.FromMilliseconds(200)));
-                        sct.CenterX = gd.ActualWidth / 2;
-                        sct.CenterY = gd.ActualHeight / 2;
-                        sct.BeginAnimation(ScaleTransform.ScaleXProperty, das1);
-                        sct.BeginAnimation(ScaleTransform.ScaleYProperty, das2);
-                            lastTimesX = timesX;
-                       //// }
-
-                            //double tanOffset = gd.RenderSize.Width / 2 + centerX / gd.RenderSize.Height / 2 + centerY;
-                            //angleY += Math.Atan(tanOffset) * 180 / Math.PI;
-                            var dar1 = new DoubleAnimation(angleYLast, angleY, new Duration(TimeSpan.FromMilliseconds(200)));
-                            rt.CenterX = gd.ActualWidth / 2;
-                            rt.CenterY = gd.ActualHeight / 2;
-                            rt.BeginAnimation(RotateTransform.AngleProperty, dar1);
-
-
-                            double deltaX = centerX - gd.ActualWidth / 2;
-                            double deltaY = centerY - gd.ActualHeight / 2;
-                            var dat1 = new DoubleAnimation(gdCenter.X, deltaX * 1.5, new Duration(TimeSpan.FromMilliseconds(200)));
-                            var dat2 = new DoubleAnimation(gdCenter.Y, deltaY * 1.5, new Duration(TimeSpan.FromMilliseconds(200)));
-                            tlt.BeginAnimation(TranslateTransform.XProperty, dat1);
-                            tlt.BeginAnimation(TranslateTransform.YProperty, dat2);
-                            gdCenter.X = deltaX;
-                            gdCenter.Y = deltaY;
-
-                    };
-                timer.Start();
             };
             stdEnd.Completed += (c, d) =>
                 {
                     this.Close();
-                };           
+                };
             this.Loaded += MainWindow_Loaded;
         }
 
@@ -161,6 +102,18 @@ namespace KinectExplorer
             gd.BeginAnimation(Grid.WidthProperty, widthx);
             gd.BeginAnimation(Grid.HeightProperty, heightx);
 
+            timerTrans = new DispatcherTimer();
+            timerTrans.Interval = TimeSpan.FromMilliseconds(800);
+            timerTrans.Tick += (a, b) =>
+            {
+                timerTrans.Stop();
+                khbTip.Hovering();
+
+            };
+            khbTip.Click += (c, d) =>
+            {
+                allowTrans = allowTrans == false;
+            };
         }
 
         private void main_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -173,27 +126,87 @@ namespace KinectExplorer
 
         public void SetHandLeftPoint(Point point)
         {
-
             SetElementPosition(LeftHand, point);
             leftHand = point;
+            Transform();
 
         }
         public void SetHandRightPoint(Point point)
         {
             SetElementPosition(RightHand, point);
             rightHand = point;
+            Transform();
+        }
+
+        private void Transform()
+        {
+            double centerX = (rightHand.X - leftHand.X)/2 + leftHand.X;
+            double centerY = (rightHand.Y - leftHand.Y)/2 + leftHand.Y;
+
+            double timesX = (rightHand.X - leftHand.X) / gd.ActualWidth;
+            double angleY = Math.Atan((rightHand.Y -leftHand.Y) / (rightHand.X - leftHand.X)) * 180 / Math.PI;
+
+            if(Math.Abs(rightHand.X-rightHandLast.X)<25&&Math.Abs(rightHand.Y-rightHandLast.Y)<25&&
+                Math.Abs(leftHand.X - leftHandLast.X) < 25 && Math.Abs(leftHand.Y - leftHandLast.Y)<25)
+                
+            {          
+                    if (allowTic)
+                    {
+                        allowTic = false;
+                        timerTrans.Start();
+                    } 
+                
+            }
+            else
+            {
+                khbTip.Release();
+                allowTic = true;
+            }
+            leftHandLast = leftHand;
+            rightHandLast = rightHand;
+            if (allowTrans)
+            {
+                if (!double.IsInfinity(timesX) && !double.IsNaN(timesX))
+                {
+                    var das1 = new DoubleAnimation(lastTimesX, timesX, new Duration(TimeSpan.FromMilliseconds(0)));
+                    var das2 = new DoubleAnimation(lastTimesX, timesX, new Duration(TimeSpan.FromMilliseconds(0)));
+                    sct.CenterX = gd.ActualWidth / 2;
+                    sct.CenterY = gd.ActualHeight / 2;
+                    sct.BeginAnimation(ScaleTransform.ScaleXProperty, das1);
+                    sct.BeginAnimation(ScaleTransform.ScaleYProperty, das2);
+                    lastTimesX = timesX;
+                }
+
+                //double tanOffset = gd.RenderSize.Width / 2 + centerightHand.X / gd.RenderSize.Height / 2 + centerightHand.Y;
+                //angleY += Math.Atan(tanOffset) * 180 / Math.PI;         
+                var dar1 = new DoubleAnimation(angleYLast, angleY, new Duration(TimeSpan.FromMilliseconds(0)));
+                rt.CenterX = gd.ActualWidth / 2;
+                rt.CenterY = gd.ActualHeight / 2;
+                rt.BeginAnimation(RotateTransform.AngleProperty, dar1);
+                angleYLast = angleY;
+
+
+                if (!double.IsNaN(rightHand.X) && !double.IsNaN(rightHand.Y))
+                {
+                    var dat1 = new DoubleAnimation(gdCenter.X, centerX, new Duration(TimeSpan.FromMilliseconds(0)));
+                    var dat2 = new DoubleAnimation(gdCenter.Y, centerY, new Duration(TimeSpan.FromMilliseconds(0)));
+                    tlt.BeginAnimation(TranslateTransform.XProperty, dat1);
+                    tlt.BeginAnimation(TranslateTransform.YProperty, dat2);
+                    gdCenter.X = centerX;
+                    gdCenter.Y = centerY;
+                }
+            }
             
+
         }
 
 
         public void CloseThis()
         {
             stdEnd.Begin();
-            //var opacityGrid = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0)));
+
             var widthx = new DoubleAnimation(gd.ActualWidth, w, new Duration(TimeSpan.FromMilliseconds(300)));
             var heightx = new DoubleAnimation(gd.ActualHeight, h, new Duration(TimeSpan.FromMilliseconds(300)));
-
-            //wb.BeginAnimation(Grid.OpacityProperty, opacityGrid);
             gd.BeginAnimation(Grid.WidthProperty, widthx);
             gd.BeginAnimation(Grid.HeightProperty, heightx);
 
@@ -205,20 +218,18 @@ namespace KinectExplorer
                 sct.CenterY = gd.ActualHeight / 2;
                 sct.BeginAnimation(ScaleTransform.ScaleXProperty, das1);
                 sct.BeginAnimation(ScaleTransform.ScaleYProperty, das2);
-
             }
 
-            double angleYLast = Math.Atan((rightHandLast.Y - leftHandLast.Y) / (rightHandLast.X - leftHandLast.X)) * 180 / Math.PI;
             if (!double.IsNaN(angleYLast))
             {
-                var dar1 = new DoubleAnimation(angleYLast, 0, new Duration(TimeSpan.FromMilliseconds(100)));
+                var dar1 = new DoubleAnimation(angleYLast, 0, new Duration(TimeSpan.FromMilliseconds(300)));
                 rt.CenterX = gd.ActualWidth / 2;
                 rt.CenterY = gd.ActualHeight / 2;
                 rt.BeginAnimation(RotateTransform.AngleProperty, dar1);
             }
 
-            var dat1 = new DoubleAnimation(gdCenter.X, 0, new Duration(TimeSpan.FromMilliseconds(200)));
-            var dat2 = new DoubleAnimation(gdCenter.Y, 0, new Duration(TimeSpan.FromMilliseconds(200)));
+            var dat1 = new DoubleAnimation(gdCenter.X, 0, new Duration(TimeSpan.FromMilliseconds(300)));
+            var dat2 = new DoubleAnimation(gdCenter.Y, 0, new Duration(TimeSpan.FromMilliseconds(300)));
             tlt.BeginAnimation(TranslateTransform.XProperty, dat1);
             tlt.BeginAnimation(TranslateTransform.YProperty, dat2);
 

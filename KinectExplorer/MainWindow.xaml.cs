@@ -620,30 +620,11 @@ namespace KinectExplorer
                             gestureController.UpdateAllGestures(skeleton);
                             if (detialWindow != null)
                             {
-                                //if (
-                                //    false)//Math.Abs(skeleton.Joints[JointType.HandLeft].Position.X-skeleton.Joints[JointType.ShoulderLeft].Position.X) <0.2&&
-                                //    //skeleton.Joints[JointType.ElbowLeft].Position.X < skeleton.Joints[JointType.ShoulderLeft].Position.X&&
-                                //    //Math.Abs(skeleton.Joints[JointType.ShoulderLeft].Position.Z-skeleton.Joints[JointType.HandLeft].Position.Z)<0.15)
-                                //    //skeleton.Joints[JointType.HandLeft].Position.Y > skeleton.Joints[JointType.HipCenter].Position.Y)
-                                //    //skeleton.Joints[JointType.HandLeft].Position.X>skeleton.Joints[JointType.ShoulderLeft].Position.X)
-                                //{
-                                //    //detialWindow.SetHandLeftPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandLeft]));
-                                //    //detialWindow.SetHandRightPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandRight]));
-                                //    //detialWindow.allowMove = true;
-                                //}
-                                //else
-                                //{
-                                //detialWindow.allowMove = false;
                                 if (CheckIfShowHand(skeleton))
                                 {
-                                    detialWindow.SetHandLeftPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandLeft]));
+                                    detialWindow.SetHandLeftPoint(CalcScreenPoint(skeleton, JointType.HandLeft));
+                                    detialWindow.SetHandRightPoint(CalcScreenPoint(skeleton, JointType.HandRight));
                                 }
-                                if (CheckIfShowHand(skeleton))
-                                {
-                                    detialWindow.SetHandRightPoint(TransferSkeletonPoint(skeleton.Joints[JointType.HandRight]));
-                                }
-                                //}
-
                             }
                         }
                     }
@@ -652,11 +633,8 @@ namespace KinectExplorer
                     {
                         this.nearestId = newNearestId;
                     }
-
                     // Pass skeletons to recognizer.
-
                     this.activeRecognizer.Recognize(sender, frame, this.skeletons);
-
                     this.DrawStickMen(this.skeletons);
                 }
             }
@@ -670,7 +648,6 @@ namespace KinectExplorer
         {
             // Set the highlight time to be a short time from now.
             this.highlightTime = DateTime.UtcNow + TimeSpan.FromSeconds(0.5);
-
             // Record the ID of the skeleton.
             this.highlightId = skeleton.TrackingId;
         }
@@ -683,7 +660,6 @@ namespace KinectExplorer
         {
             // Remove any previous skeletons.
             StickMen.Children.Clear();
-
             foreach (var skeleton in skeletons)
             {
                 // Only draw tracked skeletons.
@@ -770,7 +746,6 @@ namespace KinectExplorer
         private void RegisterGestures()
         {
             // define the gestures for the demo
-
             IRelativeGestureSegment[] joinedhandsSegments = new IRelativeGestureSegment[20];
             JoinedHandsSegment1 joinedhandsSegment = new JoinedHandsSegment1();
             for (int i = 0; i < 20; i++)
@@ -826,7 +801,6 @@ namespace KinectExplorer
 
 
 
-
         /// <summary>
         ///
         /// </summary>
@@ -840,7 +814,7 @@ namespace KinectExplorer
                     if (detialWindow == null && musicWindow == null)
                     {
                         HighLightStickMan();
-                        this.CloseThis();                       
+                        this.CloseThis();
                     }
                     break;
                 case "JoinedHands":
@@ -923,31 +897,32 @@ namespace KinectExplorer
             return new Point((int)x, (int)y);
         }
 
-
-        bool CheckIfShowHand(Skeleton skeleton, JointType jointType)
+        private Point CalcScreenPoint(Skeleton skeleton,JointType type)
         {
-            if (Math.Abs(skeleton.Joints[JointType.Head].Position.Z - skeleton.Joints[jointType].Position.Z) > 0.3 &&
-
-                skeleton.Joints[jointType].Position.Y > skeleton.Joints[JointType.HipCenter].Position.Y - 0.1
-                )
-                return true;
-            return false;
-
+            double adj = type == JointType.HandLeft ? 0.28 : 0.12;
+            Joint jointHand = skeleton.Joints[type];
+            Joint jointShoulderCenter = skeleton.Joints[JointType.ShoulderCenter];
+            float x = jointHand.Position.X - jointShoulderCenter.Position.X;//hX - sX;
+            float y = jointShoulderCenter.Position.Y - jointHand.Position.Y;//sY - hY;
+            return new Point((int)((x + adj) / 0.35 * SystemParameters.PrimaryScreenWidth-SystemParameters.PrimaryScreenWidth/2),
+                                 (int)(y / 0.35 * SystemParameters.PrimaryScreenHeight)-SystemParameters.PrimaryScreenHeight/2);
         }
+
+
+
         bool CheckIfShowHand(Skeleton skeleton)
         {
-            if (Math.Abs(skeleton.Joints[JointType.Head].Position.Z - skeleton.Joints[JointType.HandLeft].Position.Z) >
-                0.25 &&
-                Math.Abs(skeleton.Joints[JointType.Head].Position.Z - skeleton.Joints[JointType.HandRight].Position.Z) >
-                0.25 &&
-                skeleton.Joints[JointType.HandLeft].Position.Y > skeleton.Joints[JointType.HipCenter].Position.Y - 0.1 &&
-                skeleton.Joints[JointType.HandRight].Position.Y > skeleton.Joints[JointType.HipCenter].Position.Y - 0.1
+            if (skeleton.Joints[JointType.HandLeft].Position.Y>skeleton.Joints[JointType.HipLeft].Position.Y&&
+                skeleton.Joints[JointType.HandRight].Position.Y>skeleton.Joints[JointType.HipRight].Position.Y&&
+                skeleton.Joints[JointType.HandLeft].Position.Z < skeleton.Joints[JointType.ShoulderLeft].Position.Z &&
+                skeleton.Joints[JointType.HandRight].Position.Z < skeleton.Joints[JointType.ShoulderRight].Position.Z 
 
                 )
             {
                 HighLightStickMan();
                 return true;
             }
+            detialWindow.timerTrans.Stop();
             return false;
 
         }

@@ -1,13 +1,15 @@
 ﻿<Window x:Class="KinectExplorer.DetialWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:kControls="clr-namespace:Coding4Fun.Kinect.Wpf.Controls;assembly=Coding4Fun.Kinect.Wpf"
         Title="主窗口" 
         ResizeMode="NoResize" WindowStartupLocation="Manual"
         WindowStyle="None" AllowsTransparency="True"
-        Closing="main_Closing" MouseDown="main_MouseDown" BorderBrush="Pink" BorderThickness="0">
+        Closing="main_Closing" MouseDown="main_MouseDown" BorderBrush="Pink" BorderThickness="0" ShowInTaskbar="True">
     <Window.Background >        
         <SolidColorBrush x:Name="w_bg" Color="Black"  Opacity="0.6"></SolidColorBrush>
     </Window.Background>
+    
     <Grid >
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="gd" Opacity="0">
             <Grid.RenderTransform>
@@ -16,14 +18,13 @@
                     <ScaleTransform x:Name="sct"/>
                     <TranslateTransform x:Name="tlt"></TranslateTransform>
                 </TransformGroup>
-            </Grid.RenderTransform>
-            
-
+            </Grid.RenderTransform>            
         </Grid>
-        <Canvas>
-            <Ellipse Visibility="Collapsed" Width="25" Height="25" Fill="Pink" Opacity="0.8" Name="LeftHand"></Ellipse>
-            <Ellipse Width="25" Visibility="Collapsed" Height="25" Fill="Pink" Opacity="0.8" Name="RightHand"></Ellipse>
+        <Canvas HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Ellipse Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Width="25" Height="25" Fill="Pink" Opacity="0.8" Name="LeftHand"></Ellipse>
+            <Ellipse Width="25" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Height="25" Fill="Pink" Opacity="0.8" Name="RightHand"></Ellipse>
         </Canvas>
+        <kControls:HoverButton HorizontalAlignment="Center" VerticalAlignment="Center" Height="320" Width="300" Name="khbTip" TimeInterval="800" Background="Transparent"/>
     </Grid>
     
     

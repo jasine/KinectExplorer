@@ -65,10 +65,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\Coding4Fun.Kinect.Wpf.dll</HintPath>
     </Reference>
+    <Reference Include="LeapCSharp.NET4.0">
+      <HintPath>..\LeapHelper\LeapCSharp.NET4.0.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Expression.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Coding4Fun.Kinect.Wpf.1.5.0\lib\Microsoft.Expression.Drawing.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Kinect, Version=1.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Kinect, Version=1.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.QualityTools.Testing.Fakes, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Samples.Kinect.SwipeGestureRecognizer">
       <HintPath>.\Microsoft.Samples.Kinect.SwipeGestureRecognizer.dll</HintPath>
@@ -170,6 +173,10 @@
     <ProjectReference Include="..\FlowComponent\FlowComponent.csproj">
       <Project>{F26592D5-D0C2-4A3B-A520-CC1A2B817AEE}</Project>
       <Name>FlowComponent</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LeapHelper\LeapHelper.csproj">
+      <Project>{862ed364-e5fb-4be7-8e8f-bfe9d12df13c}</Project>
+      <Name>LeapHelper</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

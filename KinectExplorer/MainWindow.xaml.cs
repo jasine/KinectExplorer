@@ -9,7 +9,9 @@ using System.Collections.Generic;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using DoubanFM.Bass;
 using Fizbin.Kinect.Gestures;
 using Fizbin.Kinect.Gestures.Segments;
@@ -20,6 +22,7 @@ using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
+using LeapHelper;
 
 namespace KinectExplorer
 {
@@ -76,12 +79,18 @@ namespace KinectExplorer
         #endregion
 
         #region Private stuff
+        LeapMotinn leapMotinn;
 
         private List<FileInfo> images;
         private int currentIndex = 0;
 
         DirectoryInfo myMusicDir, myCoverDir, myLyricDir;
 
+        #endregion
+
+        /// <summary>
+        /// 加载图片
+        /// </summary>
         public void LoadImages()
         {
 
@@ -136,7 +145,7 @@ namespace KinectExplorer
                 flow.Add(Environment.MachineName, f.FullName);
         }
 
-        #endregion
+        
 
 
         #region Kinect 相关变量
@@ -266,6 +275,11 @@ namespace KinectExplorer
 
             ChangeFileInfo();//显示文件信息
 
+            leapMotinn = new LeapMotinn();
+            leapMotinn.Listener.LeapSwipeReady += ListenerLeapSwipeReady;
+            leapMotinn.Listener.LeapFingerReady += Listener_LeapFingerReady;
+            leapMotinn.Listener.LeapTapScreenReady += ListenerLeapTapScreenReady;
+            leapMotinn.Listener.LeapCircleReady += Listener_LeapCircleReady;
             // Start the Kinect system, this will cause StatusChanged events to be queued.
             this.InitializeNui();
 
@@ -290,7 +304,134 @@ namespace KinectExplorer
             };
         }
 
+        void Listener_LeapCircleReady(object sender)
+        {
+            if (musicWindow != null)
+            {
+                Action action = () => musicWindow.ChangeStatue();
+                Dispatcher.BeginInvoke(DispatcherPriority.Send, action);
+            }
+        }
 
+        void ListenerLeapTapScreenReady(object sender)
+        {
+            if (detialWindow != null || musicWindow != null)
+            {
+                Action action2 = null;
+                if (detialWindow != null)
+                {
+                    action2 = () => detialWindow.CloseThis();
+                }
+                else
+                {
+                    action2 = () => musicWindow.CloseThis();
+                }
+                Dispatcher.BeginInvoke(DispatcherPriority.Send, action2).Completed += (a, b) =>
+                {
+                    detialWindow = null;
+                    musicWindow = null;
+                };
+            }
+            else
+            {
+                Action action = () => OpenSubWindow();
+                Dispatcher.BeginInvoke(DispatcherPriority.Send, action);
+            }
+            
+        }
+
+        void Listener_LeapFingerReady(object sender, Leap.Finger first, Leap.Finger second)
+        {
+            if (detialWindow!=null)
+            {
+                Point3D left, right;
+                Action action1, action2;
+                left = new Point3D(first.TipPosition.x*3.5,
+                        -3.5*(first.TipPosition.y-100)+SystemParameters.PrimaryScreenHeight/2,first.TipPosition.z);
+                right = new Point3D(second.TipPosition.x*3.5,
+                    -3.5*(second.TipPosition.y-100)+SystemParameters.PrimaryScreenHeight/2,second.TipPosition.z);
+                if (first.TipPosition.x <= second.TipPosition.x)
+                {
+                    action1=()=>detialWindow.SetHandLeftPoint3D(left);
+                    action2=()=>detialWindow.SetHandRightPoint3D(right);
+                }
+                else
+                {
+                    action1=()=>detialWindow.SetHandLeftPoint3D(right);
+                    action2=()=>detialWindow.SetHandRightPoint3D(left);
+                }
+                Dispatcher.BeginInvoke(DispatcherPriority.Send, action1);
+                Dispatcher.BeginInvoke(DispatcherPriority.Send, action2);
+            }
+        }
+
+        void ListenerLeapSwipeReady(object sender, SwipeType type)
+        {
+            Action action=null;
+            switch (type)
+            {
+                    case SwipeType.SwipeLeft:
+                    if (detialWindow == null)
+                    {
+                        if (musicWindow != null)
+                        {
+                            action = () => musicWindow.Backword();
+                        }
+                        else
+                        {
+                            action = () => flow.GoToNext();
+                        }
+                    }
+                    break;
+                    case SwipeType.SwipeRight:
+                    if (detialWindow == null)
+                    {
+                        if (musicWindow != null)
+                        {
+                            action = () => musicWindow.Forword(); 
+                        }
+                        else
+                        {
+                            action = () => flow.GoToPrevious();
+                        }
+                    }
+                    break;
+                    //case  SwipeType.SwipeOut:
+                    //if (detialWindow == null && musicWindow == null)
+                    //{
+                    //    action = OpenSubWindow;
+                    //}
+                    //break;
+                    //case SwipeType.SwpieIn:
+                    //if (detialWindow != null || musicWindow != null)
+                    //{
+                    //    Action action2 = null;
+                    //    if (detialWindow != null)
+                    //    {
+                    //        action2 =()=> detialWindow.CloseThis();
+                    //        //detialWindow.CloseThis();
+                    //        //detialWindow = null;
+                    //    }
+                    //    else
+                    //    {
+                    //        action2=()=>musicWindow.CloseThis();
+                    //        //musicWindow.CloseThis();
+                    //        //musicWindow = null;
+                    //    }
+                    //    Dispatcher.BeginInvoke(DispatcherPriority.Send, action2).Completed+=(a, b) =>
+                    //        {
+                    //            detialWindow = null;
+                    //            musicWindow = null;
+                    //        };
+                    //}
+                    //break;
+            }
+
+            if (action != null)
+                Dispatcher.BeginInvoke(DispatcherPriority.Normal, action);
+        }
+
+        
         /// <summary>
         /// 中间的Cover被点击
         /// </summary>
@@ -937,6 +1078,7 @@ namespace KinectExplorer
                     this.Close();
                 };
             stdEnd.Begin();
+            leapMotinn.Close();
             //var datWth = new DoubleAnimation(SystemParameters.PrimaryScreenWidth, 1, new Duration(TimeSpan.FromMilliseconds(700)));
             //var datHig = new DoubleAnimation(SystemParameters.FullPrimaryScreenHeight, 1, new Duration(TimeSpan.FromMilliseconds(700)));
 

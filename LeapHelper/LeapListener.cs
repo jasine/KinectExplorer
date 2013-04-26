@@ -10,7 +10,7 @@ namespace LeapHelper
 {
     public class LeapListener:Listener
     {
-        private Object thisLock = new Object();
+        //private Object thisLock = new Object();
 
         private void SafeWriteLine(String line)
         {

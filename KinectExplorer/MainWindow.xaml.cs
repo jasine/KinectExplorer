@@ -84,7 +84,7 @@ namespace KinectExplorer
         private List<FileInfo> images;
         private int currentIndex = 0;
 
-        DirectoryInfo myMusicDir, myCoverDir, myLyricDir;
+        DirectoryInfo myMusicDir, myCoverDir, myLyricDir,myVideoDir;
 
         #endregion
 
@@ -117,7 +117,7 @@ namespace KinectExplorer
                 myLyricDir.Create();
             }
             FileInfo[] musics = myMusicDir.GetFiles("*.mp3");
-
+            
             foreach (var music in musics)
             {
                 string cover = myCoverDir + @"\" + System.IO.Path.GetFileNameWithoutExtension(music.FullName) + ".jpg";
@@ -140,9 +140,34 @@ namespace KinectExplorer
                 images.Add(new FileInfo(cover));
             }
 
+            myVideoDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos));
+            DirectoryInfo thumbnailDir=new DirectoryInfo(myVideoDir.FullName+@"\thumbnais");
+            if (!thumbnailDir.Exists)
+            {
+               thumbnailDir = myVideoDir.CreateSubdirectory("thumbnails");
+            }
+            FileInfo[] videos = myVideoDir.GetFiles("*.mp4");
+            foreach (var video in videos)
+            {
+                string thumbnail = thumbnailDir + @"\" + System.IO.Path.GetFileNameWithoutExtension(video.FullName) + ".jpg";
+                if (!File.Exists(thumbnail))
+                {                   
+                    if (VideoUnity.CatchImg(video.FullName,thumbnail))
+                    {
+                        images.Add(new FileInfo(thumbnail));
+                    }
+     
+                }
+                else
+                {
+                    images.Add(new FileInfo(thumbnail));
+                }
+            }
+
+
             images.Sort(new FileInfoComparer());
             foreach (FileInfo f in images)
-                flow.Add(Environment.MachineName, f.FullName);
+            flow.Add(Environment.MachineName, f.FullName);
         }
 
         
@@ -151,8 +176,9 @@ namespace KinectExplorer
         #region Kinect 相关变量
 
 
-        private DetialWindow detialWindow;
-        private MusicWindow musicWindow;
+        private volatile DetialWindow detialWindow;
+        private volatile MusicWindow musicWindow;
+        private volatile VideoWindow videoWindow;
 
         /// <summary>
         /// The recognizer being used.
@@ -311,25 +337,35 @@ namespace KinectExplorer
                 Action action = () => musicWindow.ChangeStatue();
                 Dispatcher.BeginInvoke(DispatcherPriority.Send, action);
             }
+            else if (videoWindow!=null)
+            {
+                Action action = () => videoWindow.ChangeStatue();
+                Dispatcher.BeginInvoke(DispatcherPriority.Send, action);
+            }
         }
 
         void ListenerLeapTapScreenReady(object sender)
         {
-            if (detialWindow != null || musicWindow != null)
+            if (detialWindow != null || musicWindow != null||videoWindow!=null)
             {
                 Action action2 = null;
                 if (detialWindow != null)
                 {
                     action2 = () => detialWindow.CloseThis();
                 }
-                else
+                else if(musicWindow!=null)
                 {
                     action2 = () => musicWindow.CloseThis();
+                }
+                else
+                {
+                    action2 = () => videoWindow.CloseThis();
                 }
                 Dispatcher.BeginInvoke(DispatcherPriority.Send, action2).Completed += (a, b) =>
                 {
                     detialWindow = null;
                     musicWindow = null;
+                    videoWindow = null;
                 };
             }
             else
@@ -377,6 +413,10 @@ namespace KinectExplorer
                         {
                             action = () => musicWindow.Backword();
                         }
+                        else if (videoWindow != null)
+                        {
+                            action = () => videoWindow.Backword();
+                        }
                         else
                         {
                             action = () => flow.GoToNext();
@@ -389,6 +429,10 @@ namespace KinectExplorer
                         if (musicWindow != null)
                         {
                             action = () => musicWindow.Forword(); 
+                        }
+                        else if (videoWindow != null)
+                        {
+                            action = () => videoWindow.Forword(); 
                         }
                         else
                         {
@@ -447,14 +491,22 @@ namespace KinectExplorer
         /// </summary>
         private void OpenSubWindow()
         {
-            string path = CheckIfMusicPath(currentIndex);
-            if (path != "")
+            FileInfo info = CheckIfMediaPath(currentIndex);
+            if (info != null)
             {
-                ID3Info id3Info = new ID3Info(path, true);
-                id3Info.Load();
-                BassEngine.Instance.OpenFile(path);
-                musicWindow = new MusicWindow(images[currentIndex], id3Info);
-                musicWindow.Show();
+                if (info.Extension == ".mp3")
+                {
+                    ID3Info id3Info = new ID3Info(info.FullName, true);
+                    id3Info.Load();
+                    BassEngine.Instance.OpenFile(info.FullName);
+                    musicWindow = new MusicWindow(images[currentIndex], id3Info);
+                    musicWindow.Show();
+                }
+                else
+                {
+                    videoWindow=new VideoWindow(images[currentIndex],info);
+                    videoWindow.Show();
+                }
             }
             else
             {
@@ -469,16 +521,19 @@ namespace KinectExplorer
         /// </summary>
         /// <param name="currentIndex"></param>
         /// <returns></returns>
-        private string CheckIfMusicPath(int currentIndex)
+        private FileInfo CheckIfMediaPath(int currentIndex)
         {
-            string path = myMusicDir.FullName + @"\" +
+            string musicPath = myMusicDir.FullName + @"\" +
                           System.IO.Path.GetFileNameWithoutExtension(images[currentIndex].FullName) + ".mp3";
-            if (File.Exists(path))
-                return path;
-            else
+            if (File.Exists(musicPath))
+                return new FileInfo(musicPath);
+            string videoPath = myVideoDir.FullName + @"\" +
+                          System.IO.Path.GetFileNameWithoutExtension(images[currentIndex].FullName) + ".mp4";
+            if (File.Exists(videoPath))
             {
-                return "";
+                return new FileInfo(videoPath);
             }
+            return null;
         }
 
 
@@ -498,8 +553,8 @@ namespace KinectExplorer
         /// </summary>
         private void ChangeFileInfo()
         {
-            string path = CheckIfMusicPath(currentIndex);
-            fileInfo.Text = path != "" ? new FileInfo(path).Name : images[currentIndex].Name;
+            FileInfo info = CheckIfMediaPath(currentIndex);
+            fileInfo.Text = info!=null ? info.Name : images[currentIndex].Name;
             if (flow.Index != Convert.ToInt32(slider.Value))
                 slider.Value = flow.Index;
         }
@@ -577,6 +632,10 @@ namespace KinectExplorer
                         {
                             musicWindow.Backword();
                         }
+                        else if(videoWindow!=null)
+                        {
+                            videoWindow.Backword();
+                        }
                         else
                         {
                             flow.GoToNext();
@@ -596,6 +655,10 @@ namespace KinectExplorer
                         if (musicWindow != null)
                         {
                             musicWindow.Forword();
+                        }
+                        else if (videoWindow != null)
+                        {
+                            videoWindow.Forword();
                         }
                         else
                         {
@@ -952,22 +1015,30 @@ namespace KinectExplorer
             switch (e.GestureName)
             {
                 case "Menu":
-                    if (detialWindow == null && musicWindow == null)
+                    if (detialWindow == null && musicWindow == null&&videoWindow==null)
                     {
                         HighLightStickMan();
                         this.CloseThis();
                     }
                     break;
                 case "JoinedHands":
-                    if (musicWindow != null && detialWindow == null)
+                    if ( detialWindow == null)
                     {
-                        HighLightStickMan();
-                        musicWindow.ChangeStatue();
+                        if (musicWindow != null)
+                        {
+                            HighLightStickMan();
+                            musicWindow.ChangeStatue();
+                        }
+                        else
+                        {
+                            HighLightStickMan();
+                            videoWindow.ChangeStatue();
+                        }
                     }
                     break;
                 case "ZoomIn":
                     //Gesture = "Zoom In";
-                    if (detialWindow == null && musicWindow == null)
+                    if (detialWindow == null && musicWindow == null&&videoWindow==null)
                     {
                         HighLightStickMan();
                         this.Close();
@@ -978,7 +1049,7 @@ namespace KinectExplorer
                     break;
                 case "Pull":
                 case "PullLeft":
-                    if (detialWindow == null && musicWindow == null)
+                    if (detialWindow == null && musicWindow == null&&videoWindow==null)
                     {
                         HighLightStickMan();
                         OpenSubWindow();
@@ -986,7 +1057,7 @@ namespace KinectExplorer
                     break;
                 case "Push":
                 case "PushLeft":
-                    if (detialWindow != null || musicWindow != null)
+                    if (detialWindow != null || musicWindow != null||videoWindow!=null)
                     {
                         HighLightStickMan();
                         if (detialWindow != null)
@@ -994,10 +1065,15 @@ namespace KinectExplorer
                             detialWindow.CloseThis();
                             detialWindow = null;
                         }
-                        else
+                        else if(musicWindow!=null)
                         {
                             musicWindow.CloseThis();
                             musicWindow = null;
+                        }
+                        else
+                        {
+                            videoWindow.CloseThis();
+                            videoWindow = null;
                         }
                     }
                     break;
@@ -1078,8 +1154,11 @@ namespace KinectExplorer
                     this.Close();
                 };
             stdEnd.Begin();
-            leapMotinn.Close();
-            //var datWth = new DoubleAnimation(SystemParameters.PrimaryScreenWidth, 1, new Duration(TimeSpan.FromMilliseconds(700)));
+            if (leapMotinn!=null)
+            {
+                leapMotinn.Close();
+                
+            }            //var datWth = new DoubleAnimation(SystemParameters.PrimaryScreenWidth, 1, new Duration(TimeSpan.FromMilliseconds(700)));
             //var datHig = new DoubleAnimation(SystemParameters.FullPrimaryScreenHeight, 1, new Duration(TimeSpan.FromMilliseconds(700)));
 
             //this.BeginAnimation(MainWindow.WidthProperty, datWth);

@@ -239,10 +239,7 @@ namespace KinectExplorer
 
        
 
-        private void gd_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-
-        }
+        
 
         private void gd_MouseEnter(object sender, MouseEventArgs e)
         {

@@ -15,10 +15,7 @@
             <DoubleAnimation Storyboard.TargetName="w_bg" Storyboard.TargetProperty="Opacity"
                              From="0" To="0.8" Duration="0:0:0.7"/>
         </Storyboard>
-        <Storyboard x:Key="middle">
-            <DoubleAnimation    Storyboard.TargetName="tlt" Storyboard.TargetProperty="X"
-                             From="0" To="-200" Duration="0:0:0.7"/>
-        </Storyboard>
+        
         <Storyboard x:Key="end">
             
             <DoubleAnimation Storyboard.TargetName="w_bg" Storyboard.TargetProperty="Opacity"
@@ -32,7 +29,7 @@
         <local:ToTransparentColorConverter x:Key="ToTransparentColorConverter"/>
     </Window.Resources>
     <Grid >
-        <Grid HorizontalAlignment="Center" ZIndex="3" VerticalAlignment="Center" x:Name="gd" Opacity="0" MouseDown="gd_MouseDown" MouseEnter="gd_MouseEnter" MouseLeave="gd_MouseLeave">
+        <Grid HorizontalAlignment="Center" ZIndex="3" VerticalAlignment="Center" x:Name="gd" Opacity="0"  MouseEnter="gd_MouseEnter" MouseLeave="gd_MouseLeave">
             <Grid.RenderTransform>
                 <TransformGroup>
                     <RotateTransform x:Name="rt"/>

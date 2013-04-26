@@ -6,7 +6,8 @@
         WindowStyle="None" AllowsTransparency="True"
         xmlns:sound="clr-namespace:WPFSoundVisualizationLib;assembly=WPFSoundVisualizationLib"
         xmlns:local="clr-namespace:KinectExplorer"
-        Closing="main_Closing" MouseDown="main_MouseDown" BorderBrush="Pink" BorderThickness="0" ShowInTaskbar="False">
+        BorderBrush="Pink" BorderThickness="0" ShowInTaskbar="False"
+        MouseDown="main_MouseDown">
     <Window.Background >
         <SolidColorBrush x:Name="w_bg" Color="Black"  Opacity="0.6"></SolidColorBrush>
     </Window.Background>
@@ -58,7 +59,7 @@
         <local:ToTransparentColorConverter x:Key="ToTransparentColorConverter"/>
     </Window.Resources>
     <Grid >
-        <Grid HorizontalAlignment="Center" ZIndex="3" VerticalAlignment="Center" x:Name="gd" Opacity="0" MouseDown="gd_MouseDown" MouseEnter="gd_MouseEnter" MouseLeave="gd_MouseLeave">
+        <Grid HorizontalAlignment="Center" ZIndex="3" VerticalAlignment="Center" x:Name="gd" Opacity="0" MouseEnter="gd_MouseEnter" MouseLeave="gd_MouseLeave">
             <Grid.RenderTransform>
                 <TransformGroup>
                     <RotateTransform x:Name="rt"/>

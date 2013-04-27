@@ -517,7 +517,7 @@ namespace KinectExplorer
 
 
         /// <summary>
-        /// 检查点击的Cover是否是音乐文件
+        /// 检查点击的Cover是否是音乐或视频文件
         /// </summary>
         /// <param name="currentIndex"></param>
         /// <returns></returns>
@@ -554,9 +554,34 @@ namespace KinectExplorer
         private void ChangeFileInfo()
         {
             FileInfo info = CheckIfMediaPath(currentIndex);
-            fileInfo.Text = info!=null ? info.Name : images[currentIndex].Name;
+            string strName = info!=null ? info.Name : images[currentIndex].Name;
+            fileInfo.Text=System.IO.Path.GetFileNameWithoutExtension(strName);
             if (flow.Index != Convert.ToInt32(slider.Value))
                 slider.Value = flow.Index;
+            if (info==null)
+                info=new FileInfo(images[currentIndex].Name);
+            string picName;
+            switch (info.Extension)
+            {
+                case   ".png":
+                case ".jpg":
+                    picName = "photo.png";
+                    break;
+                case ".mp3":
+                case ".wav":
+                    picName = "music.png";
+                    break;
+                case ".mp4":
+                case ".flv":
+                    picName = "video.png";
+                    break;
+                default:
+                    picName = null;
+                    break;
+            }
+            if(picName!=null)
+                ImgMedia.Source = new BitmapImage(new Uri(Environment.CurrentDirectory + @"\"+picName));
+            
         }
 
 

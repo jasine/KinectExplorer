@@ -83,7 +83,7 @@
             <TextBlock Name="album" Grid.Row="0" Foreground="White" FontSize="22" Padding="25,210">《未知专辑》</TextBlock>
             <TextBlock Name="year" Grid.Row="0" Foreground="White" FontSize="22" Padding="50,240">未知年份</TextBlock>
             <!--<TextBlock Name="kind" Grid.Row="0" Foreground="White" FontSize="22" Padding="150,240">未知流派</TextBlock>-->
-            <ProgressBar Grid.Row="1" Opacity="0.7" Width="300" Name="process" Value="30" Height="15" VerticalAlignment="Top" HorizontalAlignment="Left" Margin ="25,10"  Foreground="White" Background="Black" MouseDown="process_MouseDown" >
+            <ProgressBar Grid.Row="1" Opacity="0.7" Width="300" Name="process" Value="0" Height="15" VerticalAlignment="Top" HorizontalAlignment="Left" Margin ="25,10"  Foreground="White" Background="Black" MouseDown="process_MouseDown" >
                 <ProgressBar.BorderBrush>
                     <SolidColorBrush Color="White"></SolidColorBrush>
                 </ProgressBar.BorderBrush>

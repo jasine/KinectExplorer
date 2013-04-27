@@ -293,7 +293,8 @@ namespace KinectExplorer
         {
             precent = precent > 1 ? 1 : precent;
             precent = precent < 0 ? 0 : precent;
-            m_player.Position = (float)precent;            
+            m_player.Position = (float)precent;
+            process.Value = precent*100;
         }
 
 

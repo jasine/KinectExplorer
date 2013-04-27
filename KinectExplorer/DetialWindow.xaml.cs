@@ -31,7 +31,17 @@ namespace KinectExplorer
         private bool allowTic=true;
         public Point heapCenter;
 
-        public DetialWindow(FileInfo imgSrc)
+        public static DetialWindow Instance { get; private set; }
+
+        public static DetialWindow GetInstance(FileInfo imgSrc)
+        {
+            if(Instance!=null)
+                Instance.Close();
+            Instance=new DetialWindow(imgSrc);
+            return Instance;
+        }
+
+        private DetialWindow(FileInfo imgSrc)
         {
             InitializeComponent();
             gdCenter = new Point(0, 0);

@@ -6,7 +6,7 @@
         WindowStyle="None" AllowsTransparency="True"
         xmlns:sound="clr-namespace:WPFSoundVisualizationLib;assembly=WPFSoundVisualizationLib"
         xmlns:local="clr-namespace:KinectExplorer" xmlns:t="clr-namespace:Taygeta.Controls;assembly=Taygeta.Controls"
-        MouseDown="main_MouseDown" BorderBrush="Pink" BorderThickness="0" ShowInTaskbar="False">
+        MouseDown="main_MouseDown" BorderBrush="Pink" BorderThickness="0" ShowInTaskbar="False" Closing="VideoWindow_OnClosing">
     <Window.Background >
         <SolidColorBrush x:Name="w_bg" Color="Black"  Opacity="0.6"></SolidColorBrush>
     </Window.Background>
@@ -25,7 +25,10 @@
             <DoubleAnimation Storyboard.TargetName="w_bg" Storyboard.TargetProperty="Opacity"
                              From="0.6" To="0" Duration="0:0:0.3" />
         </Storyboard>
-        
+        <Storyboard x:Key="VideoFinish">
+            <DoubleAnimation Storyboard.TargetName="m_videoImage" Storyboard.TargetProperty="Opacity"
+                             From="1" To="0" Duration="0:0:0.9"></DoubleAnimation>
+        </Storyboard>
         <local:ToTransparentColorConverter x:Key="ToTransparentColorConverter"/>
     </Window.Resources>
     <Grid >
@@ -37,13 +40,13 @@
                     <TranslateTransform x:Name="tlt"></TranslateTransform>
                 </TransformGroup>
             </Grid.RenderTransform>
-            <t:VideoImageSource Name="m_videoImage" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <t:VideoImageSource Name="m_videoImage" Stretch="Fill" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             <Image  Name="playStatue" Source="pause.png" Width="150" Height="150"   HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0"  MouseDown="playStatue_MouseDown"></Image>
 
         </Grid>
              
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Orientation="Horizontal" Margin="0,0,0,0">          
-            <ProgressBar Opacity="0.9" Width="0" Name="process" Value="0" Height="10" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin ="25,10"  Foreground="White" Background="Black" MouseDown="process_MouseDown" >
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Orientation="Horizontal" Margin="0,0,0,-5">          
+            <ProgressBar Opacity="0.9" Width="0" Name="process" Value="0" Height="10" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin ="25,9"  Foreground="White" Background="Black" MouseDown="process_MouseDown" >
                 <ProgressBar.BorderBrush>
                     <SolidColorBrush Color="White"></SolidColorBrush>
                 </ProgressBar.BorderBrush>

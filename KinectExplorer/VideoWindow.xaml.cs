@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,7 +27,8 @@ namespace KinectExplorer
     {
         private ImageSource img;
         private double size, w, h;
-        Storyboard stdStart, stdEnd, stdEnd2;
+        Storyboard stdStart, stdEnd, stdEnd2,stdVideoFinish;
+        public static VideoWindow Instance { get; private set; }
   
         private string fileName;
 
@@ -34,8 +36,15 @@ namespace KinectExplorer
         IVideoPlayer m_player;
         IMedia m_media;
 
+        public static VideoWindow GetInstance(FileInfo imgSrc, FileInfo videoSrc)
+        {
+            if (Instance != null)
+                Instance.Close();
+            Instance=new VideoWindow(imgSrc,videoSrc);
+            return Instance;
+        }
 
-        public VideoWindow(FileInfo imgSrc,FileInfo videoSrc)
+        private VideoWindow(FileInfo imgSrc,FileInfo videoSrc)
         //public VideoWindow()
         {
 
@@ -77,6 +86,7 @@ namespace KinectExplorer
             stdStart = (Storyboard)this.Resources["start"];
             stdEnd = (Storyboard)this.Resources["end"];
             stdEnd2 = (Storyboard)this.Resources["end_2"];
+            stdVideoFinish = (Storyboard) Resources["VideoFinish"];
 
             stdStart.Completed += (a, b) =>
             {
@@ -90,8 +100,11 @@ namespace KinectExplorer
                 m_media.Events.DurationChanged += Events_DurationChanged;
                 m_media.Events.StateChanged += Events_StateChanged;               
                 m_player.Open(m_media);
+                
                 m_media.Parse(true);
                 m_player.Play();
+                //System.Drawing.Size s = m_player.GetVideoSize(0);
+                //m_player.TakeSnapShot(0, @"C:\");
                 DispatcherTimer timer=new DispatcherTimer();
                 timer.Interval = TimeSpan.FromMilliseconds(1000);
                 timer.Tick += (c, d) =>
@@ -139,17 +152,20 @@ namespace KinectExplorer
         private void InitControls()
         {
             gd.Background = new ImageBrush(img);
-            m_videoImage.Visibility = Visibility.Hidden;
+            //m_videoImage.Visibility = Visibility.Hidden;
             process.Value = 0;
             TimeTotal.Content = "00:00:00";
             TimeNow.Content = "00:00:00";
+            CloseThis();
+            //stdVideoFinish.Begin();
+            //stdVideoFinish.Completed += (a, b) => CloseThis();
         }
 
         void Events_TimeChanged(object sender, MediaPlayerTimeChanged e)
         {
             this.Dispatcher.BeginInvoke(new Action(delegate
             {
-                TimeNow.Content = TimeSpan.FromMilliseconds(e.NewTime).ToString().Substring(0, 8);
+                TimeNow.Content = TimeSpan.FromMilliseconds(e.NewTime).ToString().Substring(0, 8);               
             }));
         }
 
@@ -184,8 +200,8 @@ namespace KinectExplorer
             playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\pause.png")); playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\pause.png"));
             double w2 = img.Width, h2 = img.Height;
 
-            double times1 = img.Width / (SystemParameters.PrimaryScreenWidth - 60.0);
-            double times2 = img.Height / (SystemParameters.PrimaryScreenHeight - 40.0);
+            double times1 = img.Width / (SystemParameters.PrimaryScreenWidth - 80.0);
+            double times2 = img.Height / (SystemParameters.PrimaryScreenHeight - 60.0);
             double times = times1 > times2 ? times1 : times2;
             w2 = w2 / times;
             h2 = h2 / times;
@@ -203,6 +219,7 @@ namespace KinectExplorer
 
         public void CloseThis()
         {
+            stdVideoFinish.Begin();
             playStatue.Opacity = 0;
             m_player.Stop();
             stdEnd.Begin();
@@ -215,6 +232,7 @@ namespace KinectExplorer
 
         private void CloseAnmit()
         {
+
             //var opacityGrid = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0)));
             var widthx = new DoubleAnimation(gd.ActualWidth, w, new Duration(TimeSpan.FromMilliseconds(300)));
             var heightx = new DoubleAnimation(gd.ActualHeight, h, new Duration(TimeSpan.FromMilliseconds(300)));
@@ -309,6 +327,12 @@ namespace KinectExplorer
         }
 
 
-
+        private void VideoWindow_OnClosing(object sender, CancelEventArgs e)
+        {
+            m_player.Stop();
+            m_player.Dispose();
+            m_media.Dispose();
+           
+        }
     }
 }

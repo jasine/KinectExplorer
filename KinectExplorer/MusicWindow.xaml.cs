@@ -22,12 +22,21 @@ namespace KinectExplorer
         private double size, w, h;
         Storyboard stdStart, stdEnd, stdMiddle, stdEnd2;
         //private Point lastCenter;
-    
+        public static MusicWindow Instace { get; private set; }
+
+        public static MusicWindow GetInstance(FileInfo imgSrc, ID3Info id3)
+        {
+            if(Instace!=null)
+                Instace.Close();
+            Instace = new MusicWindow(imgSrc, id3);
+            return Instace;
+
+        }
         
         private DispatcherTimer timerLyric;
         private string fileName;
 
-        public MusicWindow(FileInfo imgSrc, ID3Info id3)
+        private MusicWindow(FileInfo imgSrc, ID3Info id3)
         {
            
             InitializeComponent();
@@ -184,16 +193,20 @@ namespace KinectExplorer
 
         public void CloseThis()
         {
-            playStatue.Opacity = 0;
-            timerLyric.Stop();
-            //timerLyric = null;
-            lyric.Text = "";
-            var datImg = new DoubleAnimation(-1 * SystemParameters.PrimaryScreenWidth * 0.2, 0, new Duration(TimeSpan.FromMilliseconds(700)));
-            var datInfo = new DoubleAnimation(SystemParameters.PrimaryScreenWidth * 0.2, 0, new Duration(TimeSpan.FromMilliseconds(700)));
-            tlt.BeginAnimation(TranslateTransform.XProperty, datImg);
-            infoTlt.BeginAnimation(TranslateTransform.XProperty, datInfo);
-            BassEngine.Instance.Stop();
-            stdEnd.Begin();
+            if (stdEnd != null)
+            {
+                playStatue.Opacity = 0;
+                timerLyric.Stop();
+                //timerLyric = null;
+                lyric.Text = "";
+                var datImg = new DoubleAnimation(-1 * SystemParameters.PrimaryScreenWidth * 0.2, 0, new Duration(TimeSpan.FromMilliseconds(700)));
+                var datInfo = new DoubleAnimation(SystemParameters.PrimaryScreenWidth * 0.2, 0, new Duration(TimeSpan.FromMilliseconds(700)));
+                tlt.BeginAnimation(TranslateTransform.XProperty, datImg);
+                infoTlt.BeginAnimation(TranslateTransform.XProperty, datInfo);
+                BassEngine.Instance.Stop();
+                stdEnd.Begin();
+                stdEnd = null;
+            }         
         }
 
         private void CloseAnmit()
@@ -220,7 +233,8 @@ namespace KinectExplorer
                 return;
             Point q = e.GetPosition(process);
             if (q.X < process.ActualWidth + 5 && q.Y < process.ActualHeight + 5 && q.X > -5 && q.Y > -5)
-                return;            
+                return;
+            
             CloseThis();
         }
 

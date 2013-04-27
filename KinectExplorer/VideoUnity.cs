@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using Declarations.Media;
+using Declarations.Players;
+using Implementation;
 
 namespace KinectExplorer
 {
@@ -17,8 +21,17 @@ namespace KinectExplorer
         {
             const string ffmpeg = "ffmpeg.exe";
             //string flvImg = imgFile + ".jpg";
-            const string flvImgSize = "640*480";
+            string flvImgSize = "640*480";
+            MediaPlayerFactory m_factory = new MediaPlayerFactory();
+            IVideoPlayer m_player = m_factory.CreatePlayer<IVideoPlayer>();
+            IMediaFromFile m_media = m_factory.CreateMedia<IMediaFromFile>(fileName);            
+            m_player.Open(m_media);
+            m_media.Parse(true);
 
+            System.Drawing.Size size = m_player.GetVideoSize(0);
+            if (!size.IsEmpty)
+                flvImgSize = size.Width.ToString() + "*" + size.Height.ToString();
+            //m_player.TakeSnapShot(1, @"C:");
             System.Diagnostics.ProcessStartInfo ImgstartInfo = new System.Diagnostics.ProcessStartInfo(ffmpeg);
             ImgstartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
             ImgstartInfo.Arguments = "   -i   " + fileName + "  -y  -f  image2   -ss 2 -vframes 1  -s   " + flvImgSize + "   " + imgFile;
@@ -29,12 +42,9 @@ namespace KinectExplorer
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                return false;
             }
-            if (System.IO.File.Exists(imgFile))
-            {
-                return true;
-            }
-            return false;
+            return true;
         }
 
     }

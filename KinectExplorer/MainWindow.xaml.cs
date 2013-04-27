@@ -150,13 +150,14 @@ namespace KinectExplorer
             foreach (var video in videos)
             {
                 string thumbnail = thumbnailDir + @"\" + System.IO.Path.GetFileNameWithoutExtension(video.FullName) + ".jpg";
+                
                 if (!File.Exists(thumbnail))
                 {                   
                     if (VideoUnity.CatchImg(video.FullName,thumbnail))
                     {
                         images.Add(new FileInfo(thumbnail));
                     }
-     
+                    //images.Add(new FileInfo(thumbnail));
                 }
                 else
                 {
@@ -499,18 +500,18 @@ namespace KinectExplorer
                     ID3Info id3Info = new ID3Info(info.FullName, true);
                     id3Info.Load();
                     BassEngine.Instance.OpenFile(info.FullName);
-                    musicWindow = new MusicWindow(images[currentIndex], id3Info);
+                    musicWindow = MusicWindow.GetInstance(images[currentIndex], id3Info);
                     musicWindow.Show();
                 }
                 else
                 {
-                    videoWindow=new VideoWindow(images[currentIndex],info);
+                    videoWindow = VideoWindow.GetInstance(images[currentIndex], info);//new VideoWindow(images[currentIndex],info);
                     videoWindow.Show();
                 }
             }
             else
             {
-                detialWindow = new DetialWindow(images[currentIndex]);
+                detialWindow = DetialWindow.GetInstance(images[currentIndex]);
                 detialWindow.Show();
             }
         }

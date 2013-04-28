@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -8,6 +10,7 @@ using System.Windows.Media.Animation;
 using System.IO;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
+using Sheva.Windows.Controls;
 
 namespace KinectExplorer
 {
@@ -18,7 +21,7 @@ namespace KinectExplorer
     {
         private ImageSource img;
         private double size, w, h;
-        Storyboard stdStart, stdEnd, stdMiddle;
+        Storyboard stdStart, stdEnd, stdMiddle,stdEnd2;
 
         private double angleYLast = 0;
         private double lastTimesX = 1;
@@ -30,6 +33,8 @@ namespace KinectExplorer
         public DispatcherTimer timerTrans;
         private bool allowTic=true;
         public Point heapCenter;
+
+        private DateTime lastTime;
 
         public static DetialWindow Instance { get; private set; }
 
@@ -45,8 +50,8 @@ namespace KinectExplorer
         {
             InitializeComponent();
             gdCenter = new Point(0, 0);
-
-
+            
+            Images.Focus();
             this.Width = SystemParameters.PrimaryScreenWidth;
             this.Height = SystemParameters.PrimaryScreenHeight;
             this.Left = 0;
@@ -63,7 +68,8 @@ namespace KinectExplorer
             {
                 size = SystemParameters.PrimaryScreenWidth * 0.3;
             }
-            gd.Background = new ImageBrush(img);
+            
+            //gd.Background =  new ImageBrush(img);
             if (img.Width >= img.Height)
             {
                 w = size;
@@ -79,36 +85,49 @@ namespace KinectExplorer
             stdStart = (Storyboard)this.Resources["start"];
             stdMiddle = (Storyboard)this.Resources["middle"];
             stdEnd = (Storyboard)this.Resources["end"];
+            stdEnd2 = (Storyboard)this.Resources["end2"];
 
             stdStart.Completed += (a, b) =>
-            {
-                //stdMiddle.Begin();   
-            };
+                {
+                    //stdMiddle.Begin(); 
+                    var transY = new DoubleAnimation(0,-85, new Duration(TimeSpan.FromMilliseconds(200)));                  
+                    list_trans.BeginAnimation(TranslateTransform.YProperty, transY);
+                };
             stdEnd.Completed += (c, d) =>
                 {
                     this.Close();
                 };
             this.Loaded += MainWindow_Loaded;
-        }
 
+            List<ImageSource> photos = new List<ImageSource>();
+            photos.Add(img);
+            DirectoryInfo phothDir = new DirectoryInfo(imgSrc.Directory.FullName + @"\" + Path.GetFileNameWithoutExtension(imgSrc.Name));
+            if (phothDir.Exists)
+            { 
+                ImageList.Visibility=Visibility.Visible;
+                List<FileInfo> photoFiles = new List<FileInfo>();
+                photoFiles.AddRange(phothDir.GetFiles("*.jpg", SearchOption.AllDirectories));
+                photoFiles.AddRange(phothDir.GetFiles("*.png", SearchOption.AllDirectories));
+                foreach (var file in photoFiles)
+                {
+                    photos.Add(new BitmapImage(new Uri(file.FullName)));
+                }
+            }
+            Images.ItemsSource = photos;
+
+            
+        }
+        public ArrayList arr { get; set; }
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            
             stdStart.Begin();
             //stdMiddle.Begin();
-            double w2 = img.Width, h2 = img.Height;
 
-            if (img.Width > SystemParameters.PrimaryScreenWidth - 50 || img.Height > SystemParameters.PrimaryScreenHeight - 30)
-            {
-                double times1 = img.Width / (SystemParameters.PrimaryScreenWidth - 60.0);
-                double times2 = img.Height / (SystemParameters.PrimaryScreenHeight - 60.0);
-                double times = times1 > times2 ? times1 : times2;
-                w2 = w2 / times;
-                h2 = h2 / times;
-
-            }
+            Size newSize = AdjusePhotoFitScreen(img);
             var opacityGrid = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0)));
-            var widthx = new DoubleAnimation(w, w2, new Duration(TimeSpan.FromMilliseconds(500)));
-            var heightx = new DoubleAnimation(h, h2, new Duration(TimeSpan.FromMilliseconds(500)));
+            var widthx = new DoubleAnimation(w, newSize.Width, new Duration(TimeSpan.FromMilliseconds(500)));
+            var heightx = new DoubleAnimation(h, newSize.Height, new Duration(TimeSpan.FromMilliseconds(500)));
 
             gd.BeginAnimation(Grid.OpacityProperty, opacityGrid);
             gd.BeginAnimation(Grid.WidthProperty, widthx);
@@ -294,8 +313,16 @@ namespace KinectExplorer
 
         public void CloseThis()
         {
-            stdEnd.Begin();
+            Images.SelectedIndex = 0;
+            stdEnd2.Completed += (a, b) => CloseAnmit();
+            stdEnd2.Begin();
+            var transY = new DoubleAnimation(-85, 0, new Duration(TimeSpan.FromMilliseconds(300)));
+            list_trans.BeginAnimation(TranslateTransform.YProperty, transY);                       
+        }
 
+        private void CloseAnmit()
+        {
+            stdEnd.Begin();
             var widthx = new DoubleAnimation(gd.ActualWidth, w, new Duration(TimeSpan.FromMilliseconds(300)));
             var heightx = new DoubleAnimation(gd.ActualHeight, h, new Duration(TimeSpan.FromMilliseconds(300)));
             gd.BeginAnimation(Grid.WidthProperty, widthx);
@@ -305,8 +332,8 @@ namespace KinectExplorer
             {
                 var das1 = new DoubleAnimation(lastTimesX, 1, new Duration(TimeSpan.FromMilliseconds(300)));
                 var das2 = new DoubleAnimation(lastTimesX, 1, new Duration(TimeSpan.FromMilliseconds(300)));
-                sct.CenterX = gd.ActualWidth / 2;
-                sct.CenterY = gd.ActualHeight / 2;
+                sct.CenterX = gd.ActualWidth/2;
+                sct.CenterY = gd.ActualHeight/2;
                 sct.BeginAnimation(ScaleTransform.ScaleXProperty, das1);
                 sct.BeginAnimation(ScaleTransform.ScaleYProperty, das2);
             }
@@ -314,8 +341,8 @@ namespace KinectExplorer
             if (!double.IsNaN(angleYLast))
             {
                 var dar1 = new DoubleAnimation(angleYLast, 0, new Duration(TimeSpan.FromMilliseconds(300)));
-                rt.CenterX = gd.ActualWidth / 2;
-                rt.CenterY = gd.ActualHeight / 2;
+                rt.CenterX = gd.ActualWidth/2;
+                rt.CenterY = gd.ActualHeight/2;
                 rt.BeginAnimation(RotateTransform.AngleProperty, dar1);
             }
 
@@ -323,8 +350,6 @@ namespace KinectExplorer
             var dat2 = new DoubleAnimation(gdCenter.Y, 0, new Duration(TimeSpan.FromMilliseconds(300)));
             tlt.BeginAnimation(TranslateTransform.XProperty, dat1);
             tlt.BeginAnimation(TranslateTransform.YProperty, dat2);
-
-
         }
 
 
@@ -342,5 +367,69 @@ namespace KinectExplorer
         }
 
 
+        public void Forword()
+        {
+            if(Images.Items.Count<=1)
+                return;
+            if(DateTime.Now-lastTime<TimeSpan.FromSeconds(1))
+                return;
+            if (Images.SelectedIndex == Images.Items.Count - 1)
+                Images.SelectedIndex = 0;
+            else
+            {
+                Images.SelectedIndex++;
+            }
+            lastTime = DateTime.Now;
+        }
+
+        public void Backword()
+        {
+            if (Images.Items.Count <= 1)
+                return;
+            if (DateTime.Now - lastTime < TimeSpan.FromSeconds(1))
+                return;
+            if (Images.SelectedIndex == 0)
+                Images.SelectedIndex = Images.Items.Count - 1;
+            else
+            {
+                Images.SelectedIndex--;
+            }
+            lastTime = DateTime.Now;
+        }
+
+
+       
+
+        private void Images_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (effect.SelectedIndex == effect.Items.Count - 1)
+                effect.SelectedIndex = 0;         
+            effect.SelectedIndex++;           
+
+            ListBox lb = (ListBox)sender;
+            ImageSource selectedImg = (ImageSource)lb.SelectedItem;
+            Size newSize = AdjusePhotoFitScreen(selectedImg);
+
+            var widthx = new DoubleAnimation(gd.ActualWidth, newSize.Width, new Duration(TimeSpan.FromMilliseconds(300)));
+            var heightx = new DoubleAnimation(gd.ActualHeight, newSize.Height, new Duration(TimeSpan.FromMilliseconds(300)));
+            gd.BeginAnimation(Grid.WidthProperty, widthx);
+            gd.BeginAnimation(Grid.HeightProperty, heightx);
+        }
+
+        private static Size AdjusePhotoFitScreen(ImageSource img)
+        {
+            double width=img.Width,
+                height=img.Height;
+            if (img.Width > SystemParameters.PrimaryScreenWidth - 40 ||
+                img.Height > SystemParameters.PrimaryScreenHeight - 20)
+            {
+                double times1 = img.Width/(SystemParameters.PrimaryScreenWidth - 40.0);
+                double times2 = img.Height/(SystemParameters.PrimaryScreenHeight - 20);
+                double times = times1 > times2 ? times1 : times2;
+                width = width/times;
+                height = height/times;
+            }
+            return new Size(width,height);
+        }
     }
 }

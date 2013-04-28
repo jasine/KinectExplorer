@@ -188,6 +188,10 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CustomControlLib\CustomControlLib.csproj">
+      <Project>{021999B4-8C61-45F2-8C4E-80A08FC5CA19}</Project>
+      <Name>CustomControlLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DoubanFM.Bass\DoubanFM.Bass.csproj">
       <Project>{62324cfd-03ff-44b4-9204-66bae86972b6}</Project>
       <Name>DoubanFM.Bass</Name>
@@ -271,7 +275,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

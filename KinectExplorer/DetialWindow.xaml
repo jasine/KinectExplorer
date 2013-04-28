@@ -18,12 +18,14 @@
                     <ScaleTransform x:Name="sct"/>
                     <TranslateTransform x:Name="tlt"></TranslateTransform>
                 </TransformGroup>
-            </Grid.RenderTransform>            
+            </Grid.RenderTransform>    
+            <Image Width="300" Height="300" Source="cover.jpg"></Image>
         </Grid>
         <Canvas HorizontalAlignment="Center" VerticalAlignment="Center">
             <Ellipse Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Width="25" Height="25" Fill="Pink" Opacity="0.8" Name="LeftHand"></Ellipse>
             <Ellipse Width="25" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Height="25" Fill="Pink" Opacity="0.8" Name="RightHand"></Ellipse>
         </Canvas>
+        
         <kControls:HoverButton HorizontalAlignment="Center" VerticalAlignment="Center" Height="320" Width="300" Name="khbTip" TimeInterval="800" Background="Transparent"/>
     </Grid>
     

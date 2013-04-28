@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,7 +21,7 @@ namespace KinectExplorer
     {
         private ImageSource img;
         private double size, w, h;
-        Storyboard stdStart, stdEnd, stdMiddle, stdEnd2;
+        Storyboard stdStart, stdEnd, std_MusicFinish, stdEnd2;
         //private Point lastCenter;
         public static MusicWindow Instace { get; private set; }
 
@@ -30,11 +31,11 @@ namespace KinectExplorer
                 Instace.Close();
             Instace = new MusicWindow(imgSrc, id3);
             return Instace;
-
         }
         
-        private DispatcherTimer timerLyric;
+        private DispatcherTimer timerLyric,timerPhoto;
         private string fileName;
+        private int photoIndex;
 
         private MusicWindow(FileInfo imgSrc, ID3Info id3)
         {
@@ -73,7 +74,28 @@ namespace KinectExplorer
                 };
             timerLyric.Start();
 
+            DirectoryInfo phothDir=new DirectoryInfo(imgSrc.Directory.FullName+@"\"+Path.GetFileNameWithoutExtension(imgSrc.Name));
+            if (phothDir.Exists)
+            {
+                photo.ImageUrl = imgSrc.FullName;
+                photo.Width = gd.Width;
+                photo.Height = gd.Height;
+                List<FileInfo> photos =new List<FileInfo>();
+                              
+                photos.AddRange(phothDir.GetFiles("*.jpg", SearchOption.AllDirectories));
+                photos.AddRange(phothDir.GetFiles("*.png", SearchOption.AllDirectories));
+                photos.Add(imgSrc);
+                timerPhoto=new DispatcherTimer();
+                timerPhoto.Interval = TimeSpan.FromSeconds(3);
 
+                timerPhoto.Tick += (a, b) =>
+                    {
+                        photo.ImageUrl = photos[photoIndex++].FullName;
+                        photoIndex = photoIndex%photos.Count;
+                    };
+                timerPhoto.Start();
+
+            }
 
             this.Width = SystemParameters.PrimaryScreenWidth;
             this.Height = SystemParameters.PrimaryScreenHeight;
@@ -105,7 +127,7 @@ namespace KinectExplorer
             }
 
             stdStart = (Storyboard)this.Resources["start"];
-            stdMiddle = (Storyboard)this.Resources["middle"];
+            std_MusicFinish = (Storyboard)this.Resources["MusicFinish"];
             stdEnd = (Storyboard)this.Resources["end"];
             stdEnd2 = (Storyboard)this.Resources["end_2"];
 
@@ -195,6 +217,7 @@ namespace KinectExplorer
         {
             if (stdEnd != null)
             {
+                std_MusicFinish.Begin();
                 playStatue.Opacity = 0;
                 timerLyric.Stop();
                 //timerLyric = null;

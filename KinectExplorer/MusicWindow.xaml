@@ -55,7 +55,10 @@
             <DoubleAnimation Storyboard.TargetName="w_bg" Storyboard.TargetProperty="Opacity"
                              From="0.8" To="0" Duration="0:0:0.3" />
         </Storyboard>
-        
+        <Storyboard x:Key="MusicFinish">
+            <DoubleAnimation Storyboard.TargetName="photo" Storyboard.TargetProperty="Opacity"
+                             From="1" To="0" Duration="0:0:0.6"></DoubleAnimation>
+        </Storyboard>
         <local:ToTransparentColorConverter x:Key="ToTransparentColorConverter"/>
     </Window.Resources>
     <Grid >
@@ -67,6 +70,7 @@
                     <TranslateTransform x:Name="tlt"></TranslateTransform>
                 </TransformGroup>
             </Grid.RenderTransform>
+            <local:PhotoFrame x:Name="photo"></local:PhotoFrame>
             <Image  Name="playStatue" Source="pause.png" Width="150" Height="150"   HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0"  MouseDown="playStatue_MouseDown"></Image>
         </Grid>
         <Canvas>

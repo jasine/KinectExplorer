@@ -10,7 +10,8 @@ using System.Windows.Media.Animation;
 using System.IO;
 using System.Windows.Threading;
 using DoubanFM.Bass;
-using ID3;
+using Id3Lib;
+using Mp3Lib;
 
 namespace KinectExplorer
 {
@@ -25,73 +26,65 @@ namespace KinectExplorer
         //private Point lastCenter;
         public static MusicWindow Instace { get; private set; }
 
-        public static MusicWindow GetInstance(FileInfo imgSrc, ID3Info id3)
+        public static MusicWindow GetInstance(FileInfo imgSrc)
         {
-            if(Instace!=null)
+            if (Instace != null)
                 Instace.Close();
-            Instace = new MusicWindow(imgSrc, id3);
+            Instace = new MusicWindow(imgSrc);
             return Instace;
         }
-        
-        private DispatcherTimer timerLyric,timerPhoto;
+
+        private DispatcherTimer timerLyric, timerPhoto;
         private string fileName;
         private int photoIndex;
 
-        private MusicWindow(FileInfo imgSrc, ID3Info id3)
+        private MusicWindow(FileInfo imgSrc)
         {
-           
+
             InitializeComponent();
             SpectrumAnalyzer.RegisterSoundPlayer(BassEngine.Instance);
+            string file = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) +@"\"+
+                          System.IO.Path.GetFileNameWithoutExtension(imgSrc.Name) + ".mp3";
             fileName = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) + @"\Lyrics\"
                 + System.IO.Path.GetFileNameWithoutExtension(imgSrc.Name) + ".lrc";
-            if (id3.ID3v2Info.HaveTag)
-            {            
-                songName.Text = id3.ID3v2Info.GetTextFrame("TIT2") != ""
-                               ? id3.ID3v2Info.GetTextFrame("TIT2")
-                               : System.IO.Path.GetFileNameWithoutExtension(imgSrc.Name);
-                artist.Text = id3.ID3v2Info.GetTextFrame("TPE1") != "" ? id3.ID3v2Info.GetTextFrame("TPE1") : "未知艺术家";
-                album.Text = id3.ID3v2Info.GetTextFrame("TALB") != "" ? "《" + id3.ID3v2Info.GetTextFrame("TALB") + "》" : "未知专辑";
-                year.Text = id3.ID3v2Info.GetTextFrame("TYER");
-                //kind.Text = id3.ID3v2Info.GetTextFrame("TCON");
-            }
-            else
-            {
-                songName.Text = id3.ID3v1Info.Title != ""
-                               ? id3.ID3v1Info.Title
-                               : System.IO.Path.GetFileNameWithoutExtension(imgSrc.Name);
-                artist.Text = id3.ID3v1Info.Artist != "" ? id3.ID3v1Info.Artist : "未知艺术家";
-                album.Text = id3.ID3v1Info.Album != "" ? "《" + id3.ID3v1Info.Album + "》" : "未知专辑";
-                year.Text = id3.ID3v1Info.Year;
-                //kind.Text = genre[id3.ID3v1Info.Genre];
-            }
-            
+
+            TagHandler _tagHandler = new TagHandler(new Mp3File(file).TagModel);
+            songName.Text = _tagHandler.Title != ""
+                           ? _tagHandler.Title
+                           : System.IO.Path.GetFileNameWithoutExtension(imgSrc.Name);
+            artist.Text = _tagHandler.Artist != "" ? _tagHandler.Artist : "未知艺术家";
+            album.Text = _tagHandler.Album != "" ? "《" + _tagHandler.Album + "》" : "未知专辑";
+            year.Text = _tagHandler.Year;
+            //kind.Text = id3.ID3v2Info.GetTextFrame("TCON");
+
+
 
             timerLyric = new DispatcherTimer();
             timerLyric.Interval = TimeSpan.FromMilliseconds(200);
-            timerLyric.Tick +=(a, b) =>
+            timerLyric.Tick += (a, b) =>
                 {
                     ShowLyric();
                 };
             timerLyric.Start();
 
-            DirectoryInfo phothDir=new DirectoryInfo(imgSrc.Directory.FullName+@"\"+Path.GetFileNameWithoutExtension(imgSrc.Name));
+            DirectoryInfo phothDir = new DirectoryInfo(imgSrc.Directory.FullName + @"\" + Path.GetFileNameWithoutExtension(imgSrc.Name));
             if (phothDir.Exists)
             {
                 photo.ImageUrl = imgSrc.FullName;
                 photo.Width = gd.Width;
                 photo.Height = gd.Height;
-                List<FileInfo> photos =new List<FileInfo>();
-                              
+                List<FileInfo> photos = new List<FileInfo>();
+
                 photos.AddRange(phothDir.GetFiles("*.jpg", SearchOption.AllDirectories));
                 photos.AddRange(phothDir.GetFiles("*.png", SearchOption.AllDirectories));
                 photos.Add(imgSrc);
-                timerPhoto=new DispatcherTimer();
+                timerPhoto = new DispatcherTimer();
                 timerPhoto.Interval = TimeSpan.FromSeconds(3);
 
                 timerPhoto.Tick += (a, b) =>
                     {
                         photo.ImageUrl = photos[photoIndex++].FullName;
-                        photoIndex = photoIndex%photos.Count;
+                        photoIndex = photoIndex % photos.Count;
                     };
                 timerPhoto.Start();
 
@@ -141,7 +134,7 @@ namespace KinectExplorer
 
                 tlt.BeginAnimation(TranslateTransform.XProperty, datImg);
                 infoTlt.BeginAnimation(TranslateTransform.XProperty, datInfo);
-                process.BeginAnimation(ProgressBar.WidthProperty,datPrs);
+                process.BeginAnimation(ProgressBar.WidthProperty, datPrs);
             };
             stdEnd.Completed += (c, d) =>
             {
@@ -197,7 +190,7 @@ namespace KinectExplorer
             stdStart.Begin();
             //stdMiddle.Begin();
             playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\pause.png")); playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\pause.png"));
-           
+
             var opacityGrid = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0)));
             var widthx = new DoubleAnimation(w, 400, new Duration(TimeSpan.FromMilliseconds(500)));
             var heightx = new DoubleAnimation(h, 400, new Duration(TimeSpan.FromMilliseconds(500)));
@@ -229,7 +222,7 @@ namespace KinectExplorer
                 BassEngine.Instance.Stop();
                 stdEnd.Begin();
                 stdEnd = null;
-            }         
+            }
         }
 
         private void CloseAnmit()
@@ -241,7 +234,7 @@ namespace KinectExplorer
 
             //wb.BeginAnimation(Grid.OpacityProperty, opacityGrid);
             gd.BeginAnimation(Grid.WidthProperty, widthx);
-            gd.BeginAnimation(Grid.HeightProperty, heightx);            
+            gd.BeginAnimation(Grid.HeightProperty, heightx);
 
             var datImg = new DoubleAnimation(-1 * SystemParameters.PrimaryScreenHeight * 0.1, 0, new Duration(TimeSpan.FromMilliseconds(300)));
             //var datInfo = new DoubleAnimation(0, deltaY * 1.5, new Duration(TimeSpan.FromMilliseconds(200)));
@@ -257,7 +250,7 @@ namespace KinectExplorer
             Point q = e.GetPosition(process);
             if (q.X < process.ActualWidth + 5 && q.Y < process.ActualHeight + 5 && q.X > -5 && q.Y > -5)
                 return;
-            
+
             CloseThis();
         }
 
@@ -317,7 +310,7 @@ namespace KinectExplorer
             precent = precent > 1 ? 1 : precent;
             precent = precent < 0 ? 0 : precent;
             BassEngine.Instance.ChannelPosition =
-                TimeSpan.FromMilliseconds(BassEngine.Instance.ChannelLength.TotalMilliseconds*precent);
+                TimeSpan.FromMilliseconds(BassEngine.Instance.ChannelLength.TotalMilliseconds * precent);
             ShowLyric();
             //lyric.Text = "";
         }
@@ -325,8 +318,8 @@ namespace KinectExplorer
 
         public void Forword()
         {
-            ChangePlayingTime(BassEngine.Instance.ChannelPosition.TotalMilliseconds/
-                BassEngine.Instance.ChannelLength.TotalMilliseconds+0.1);
+            ChangePlayingTime(BassEngine.Instance.ChannelPosition.TotalMilliseconds /
+                BassEngine.Instance.ChannelLength.TotalMilliseconds + 0.1);
         }
 
         public void Backword()

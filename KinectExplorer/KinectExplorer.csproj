@@ -200,13 +200,17 @@
       <Project>{7471719c-9bd5-42ba-b42b-bb5663eebbc3}</Project>
       <Name>Fizbin.Kinect.Gestures</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ID3Class\ID3.csproj">
-      <Project>{5d66099a-a8c5-47ab-b230-c9b60dfc1b40}</Project>
-      <Name>ID3</Name>
-    </ProjectReference>
     <ProjectReference Include="..\FlowComponent\FlowComponent.csproj">
       <Project>{F26592D5-D0C2-4A3B-A520-CC1A2B817AEE}</Project>
       <Name>FlowComponent</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ID3Edit\ID3Lib\Id3Lib.csproj">
+      <Project>{4c0e405b-fbe5-4949-8953-0b4aeb0d22b8}</Project>
+      <Name>Id3Lib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ID3Edit\Mp3Lib\Mp3Lib.csproj">
+      <Project>{e16e2254-a7a2-4e45-95b9-8613c67b3fd4}</Project>
+      <Name>Mp3Lib</Name>
     </ProjectReference>
     <ProjectReference Include="..\LeapHelper\LeapHelper.csproj">
       <Project>{862ed364-e5fb-4be7-8e8f-bfe9d12df13c}</Project>

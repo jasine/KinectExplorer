@@ -15,7 +15,7 @@ using System.Windows.Threading;
 using DoubanFM.Bass;
 using Fizbin.Kinect.Gestures;
 using Fizbin.Kinect.Gestures.Segments;
-using ID3;
+using Id3Lib;
 using Microsoft.Kinect;
 using Microsoft.Samples.Kinect.SwipeGestureRecognizer;
 using Brush = System.Windows.Media.Brush;
@@ -23,6 +23,7 @@ using Brushes = System.Windows.Media.Brushes;
 using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
 using LeapHelper;
+using Mp3Lib;
 
 namespace KinectExplorer
 {
@@ -97,13 +98,13 @@ namespace KinectExplorer
             images = new List<FileInfo>();
 
             var commonPicturesDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures));
-            images.AddRange(commonPicturesDir.GetFiles("*.jpg", SearchOption.AllDirectories));
-            images.AddRange(commonPicturesDir.GetFiles("*.png", SearchOption.AllDirectories));
+            images.AddRange(commonPicturesDir.GetFiles("*.jpg"));
+            images.AddRange(commonPicturesDir.GetFiles("*.png"));
 
 
             var myPicturesDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
-            images.AddRange(myPicturesDir.GetFiles("*.jpg", SearchOption.AllDirectories));
-            images.AddRange(myPicturesDir.GetFiles("*.png", SearchOption.AllDirectories));
+            images.AddRange(myPicturesDir.GetFiles("*.jpg"));
+            images.AddRange(myPicturesDir.GetFiles("*.png"));
 
             myMusicDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic));
             myCoverDir = new DirectoryInfo(myMusicDir.FullName + @"\Covers\");
@@ -123,15 +124,20 @@ namespace KinectExplorer
                 string cover = myCoverDir + @"\" + System.IO.Path.GetFileNameWithoutExtension(music.FullName) + ".jpg";
                 if (!File.Exists(cover))
                 {
-                    ID3Info info = new ID3Info(music.FullName, true);//从ID3V2信息中读取封面
-                    info.Load();
-                    if (info.ID3v2Info.HaveTag && info.ID3v2Info.AttachedPictureFrames.Items.Length > 0)
+                    TagHandler _tagHandler = new TagHandler(new Mp3File(music).TagModel);
+                    if (_tagHandler.Picture != null)
                     {
-                        MemoryStream ms = info.ID3v2Info.AttachedPictureFrames.Items[0].Data;
-                        System.Drawing.Image img = Bitmap.FromStream(ms);
-                        img.Save(cover, System.Drawing.Imaging.ImageFormat.Jpeg);
-
+                        _tagHandler.Picture.Save(cover);
                     }
+                    //ID3Info info = new ID3Info(music.FullName, true);//从ID3V2信息中读取封面
+                    //info.Load();
+                    //if (info.ID3v2Info.HaveTag && info.ID3v2Info.AttachedPictureFrames.Items.Length > 0)
+                    //{
+                    //    MemoryStream ms = info.ID3v2Info.AttachedPictureFrames.Items[0].Data;
+                    //    System.Drawing.Image img = Bitmap.FromStream(ms);
+                    //    img.Save(cover, System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                    //}
                     else
                     {
                         File.Copy(System.Environment.CurrentDirectory + @"\cover.jpg", cover, true);
@@ -501,10 +507,8 @@ namespace KinectExplorer
             {
                 if (info.Extension == ".mp3")
                 {
-                    ID3Info id3Info = new ID3Info(info.FullName, true);
-                    id3Info.Load();
                     BassEngine.Instance.OpenFile(info.FullName);
-                    musicWindow = MusicWindow.GetInstance(images[currentIndex], id3Info);
+                    musicWindow = MusicWindow.GetInstance(images[currentIndex]);
                     musicWindow.Show();
                 }
                 else

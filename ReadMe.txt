@@ -7,6 +7,7 @@
 7.引用了 Coding4Fun Kinect Toolkit中的HoverButton http://c4fkinect.codeplex.com/
 8.引用了nvlc封装的vlc库，并修改和使用了wpf示例程序的部分代码 http://www.codeproject.com/Articles/109639/nVLC
 9.引用了ffmpeg截取视频缩略图
+10.引用TransitionControlDemo中的图片切换效果(来源与Internet,出处不详)
 
 
 jasine   jasinechen@gmail.com   Twitter @jasinechen  Weibo @jasine

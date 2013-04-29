@@ -309,10 +309,19 @@ namespace KinectExplorer
             ChangeFileInfo();//显示文件信息
 
             leapMotinn = new LeapMotinn();
-            leapMotinn.Listener.LeapSwipeReady += ListenerLeapSwipeReady;
-            leapMotinn.Listener.LeapFingerReady += Listener_LeapFingerReady;
-            leapMotinn.Listener.LeapTapScreenReady += ListenerLeapTapScreenReady;
-            leapMotinn.Listener.LeapCircleReady += Listener_LeapCircleReady;
+            if (leapMotinn.IsConnected)
+            {
+
+                leapMotinn.Listener.LeapSwipeReady += ListenerLeapSwipeReady;
+                leapMotinn.Listener.LeapFingerReady += Listener_LeapFingerReady;
+                leapMotinn.Listener.LeapTapScreenReady += ListenerLeapTapScreenReady;
+                leapMotinn.Listener.LeapCircleReady += Listener_LeapCircleReady;
+            }
+            else
+            {
+                //leapMotinn
+            }
+            
             // Start the Kinect system, this will cause StatusChanged events to be queued.
             this.InitializeNui();
 

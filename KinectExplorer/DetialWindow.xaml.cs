@@ -398,13 +398,15 @@ namespace KinectExplorer
         }
 
 
-       
 
+        private int anmitCount=0 ;
         private void Images_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (effect.SelectedIndex == effect.Items.Count - 1)
-                effect.SelectedIndex = 0;         
-            effect.SelectedIndex++;           
+            Random random=new Random();
+            int i=random.Next(0,effect.Items.Count);
+            if(i==1)
+                i = random.Next(0, effect.Items.Count);
+            effect.SelectedIndex =  i; 
 
             ListBox lb = (ListBox)sender;
             ImageSource selectedImg = (ImageSource)lb.SelectedItem;

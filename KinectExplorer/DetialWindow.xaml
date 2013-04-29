@@ -69,13 +69,14 @@
             <Ellipse Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Width="25" Height="25" Fill="Pink" Opacity="0.8" Name="LeftHand"></Ellipse>
             <Ellipse Width="25" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Height="25" Fill="Pink" Opacity="0.8" Name="RightHand"></Ellipse>
         </Canvas>
-        <Grid HorizontalAlignment="Center" Margin="0,0,0,-80" Name="ImageList" Visibility="Hidden" VerticalAlignment="Bottom">
+        <Grid HorizontalAlignment="Center"   Margin="0,0,0,-80" Name="ImageList" Visibility="Hidden" VerticalAlignment="Bottom">
             <Grid.RenderTransform>
                 <TranslateTransform x:Name="list_trans"></TranslateTransform>
             </Grid.RenderTransform>
-            <Border BorderBrush="Black" BorderThickness="2" Background="Black" Opacity="0.3" CornerRadius="5"></Border>
-
-            <ListBox Margin="5,3,5,3" SelectedIndex="0" Opacity="0.9" Background="Transparent" SelectionChanged="Images_OnSelectionChanged" Name="Images">
+            <Border BorderBrush="Black" BorderThickness="3" Background="Black" Opacity="0.3" CornerRadius="5">
+            </Border>
+            
+            <ListBox Margin="5,4,5,4" SelectedIndex="0" Opacity="1" Background="Transparent" SelectionChanged="Images_OnSelectionChanged" Name="Images">
                 <ListBox.ItemsSource>
                     <x:Array Type="{x:Type ImageSource}">
                         
@@ -84,7 +85,8 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type ImageSource}">
                         <Grid Background="Transparent">
-                            <Image Width="90" Height="65"  Source="{Binding}" Margin="2" Stretch="UniformToFill"/>                           
+                            <Image Width="90" Height="65"  Source="{Binding}" Margin="3" Stretch="UniformToFill"/>
+                            <Grid Background="Black" Opacity="0.2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"></Grid>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

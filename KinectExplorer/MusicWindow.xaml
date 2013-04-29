@@ -82,11 +82,17 @@
                 <RowDefinition Height="300"></RowDefinition>
                 <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>
-            <TextBlock Name="songName" Grid.Row="0" Foreground="White" FontSize="35" Padding="25,90">不让我的眼泪陪我过夜</TextBlock>
+            <!--<TextBlock Name="songName" Grid.Row="0" Foreground="White" FontSize="35" Padding="25,90">不让我的眼泪陪我过夜</TextBlock>
             <TextBlock Name="artist" Grid.Row="0" Foreground="White" FontSize="25" Padding="50,150">未知艺术家</TextBlock>
             <TextBlock Name="album" Grid.Row="0" Foreground="White" FontSize="22" Padding="25,210">《未知专辑》</TextBlock>
             <TextBlock Name="year" Grid.Row="0" Foreground="White" FontSize="22" Padding="50,240">未知年份</TextBlock>
-            <!--<TextBlock Name="kind" Grid.Row="0" Foreground="White" FontSize="22" Padding="150,240">未知流派</TextBlock>-->
+            <TextBlock Name="kind" Grid.Row="0" Foreground="White" FontSize="22" Padding="150,240">未知流派</TextBlock>-->
+            <TextBlock Name="Title" Grid.Row="0" Foreground="White" FontSize="40" Padding="25,80">琵琶</TextBlock>
+            <TextBlock Name="Kind" Grid.Row="0" Foreground="White" FontSize="27" Padding="50,140">表演艺术</TextBlock>
+            <TextBlock Name="OrilTime" Grid.Row="0" Foreground="White" FontSize="22" Padding="25,210">发源时间：秦</TextBlock>
+            <TextBlock Name="OrilLoca" Grid.Row="0" Foreground="White" FontSize="22" Padding="200,210">发源地：崇明岛</TextBlock>
+            <TextBlock Name="Year" Grid.Row="0" Foreground="White" FontSize="22" Padding="50,250">入遗时间：2009</TextBlock>
+            <TextBlock Name="Rank" Grid.Row="0" Foreground="White" FontSize="22" Padding="250,250">级别：世界名录</TextBlock>
             <ProgressBar Grid.Row="1" Opacity="0.7" Width="300" Name="process" Value="0" Height="15" VerticalAlignment="Top" HorizontalAlignment="Left" Margin ="25,10"  Foreground="White" Background="Black" MouseDown="process_MouseDown" >
                 <ProgressBar.BorderBrush>
                     <SolidColorBrush Color="White"></SolidColorBrush>

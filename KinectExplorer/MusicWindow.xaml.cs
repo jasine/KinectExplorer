@@ -49,13 +49,15 @@ namespace KinectExplorer
                 + System.IO.Path.GetFileNameWithoutExtension(imgSrc.Name) + ".lrc";
 
             TagHandler _tagHandler = new TagHandler(new Mp3File(file).TagModel);
-            songName.Text = _tagHandler.Title != ""
+            Title.Text = _tagHandler.Title != ""
                            ? _tagHandler.Title
                            : System.IO.Path.GetFileNameWithoutExtension(imgSrc.Name);
-            artist.Text = _tagHandler.Artist != "" ? _tagHandler.Artist : "未知艺术家";
-            album.Text = _tagHandler.Album != "" ? "《" + _tagHandler.Album + "》" : "未知专辑";
-            year.Text = _tagHandler.Year;
-            //kind.Text = id3.ID3v2Info.GetTextFrame("TCON");
+            OrilTime.Text =_tagHandler.Track!=""?"发源时间："+ _tagHandler.Genre:"";
+            
+            Kind.Text =_tagHandler.Track!=""?"类别："+ _tagHandler.Artist:"";// != "" ? _tagHandler.Artist : "未知类别";
+            OrilLoca.Text =_tagHandler.Track!=""?"起源地："+ _tagHandler.Album:"";// != "" ? "《" + _tagHandler.Album + "》" : "未知专辑";
+            Year.Text =_tagHandler.Track!=""? "入遗时间："+_tagHandler.Year:"";
+            Rank.Text =_tagHandler.Track!=""?"级别："+ _tagHandler.Track:"";
 
 
 
@@ -78,9 +80,7 @@ namespace KinectExplorer
                 photos.AddRange(phothDir.GetFiles("*.jpg", SearchOption.AllDirectories));
                 photos.AddRange(phothDir.GetFiles("*.png", SearchOption.AllDirectories));
                 photos.Add(imgSrc);
-                timerPhoto = new DispatcherTimer();
-                timerPhoto.Interval = TimeSpan.FromSeconds(3);
-
+                timerPhoto = new DispatcherTimer {Interval = TimeSpan.FromSeconds(4)};
                 timerPhoto.Tick += (a, b) =>
                     {
                         photo.ImageUrl = photos[photoIndex++].FullName;
@@ -169,7 +169,8 @@ namespace KinectExplorer
                 sttr = objFile.ReadLine();
                 while (sttr != null)
                 {
-                    if (sttr.IndexOf(sss) != -1)
+                    int temp = sttr.IndexOf(sss);
+                    if (temp!=-1)
                     {
                         lyric.Text = (sttr.Substring(sttr.LastIndexOf("]") + 1, sttr.Length - sttr.LastIndexOf("]") - 1) +
                                       "\r\n");
@@ -286,13 +287,15 @@ namespace KinectExplorer
             {
                 playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\play.png"));
                 timerLyric.Stop();
+                timerPhoto.Stop();
                 BassEngine.Instance.Pause();
-                playStatue.Opacity = 0.7;
+                playStatue.Opacity = 0.7;               
             }
             else
             {
                 playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\pause.png"));
                 timerLyric.Start();
+                timerPhoto.Start();
                 BassEngine.Instance.Play();
                 playStatue.Opacity = 0;
             }

@@ -60,6 +60,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Bass.Net.xml" />
+    <None Include="ClassDiagram1.cd" />
     <None Include="x64\bass.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

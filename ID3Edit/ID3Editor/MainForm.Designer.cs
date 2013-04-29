@@ -37,33 +37,22 @@ namespace TagEditor
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this._mainMenu = new System.Windows.Forms.MainMenu(this.components);
-            this._mainMenuItem = new System.Windows.Forms.MenuItem();
             this._scanMenuItem = new System.Windows.Forms.MenuItem();
             this._mainListBox = new System.Windows.Forms.ListBox();
             this._listBoxContextMenu = new System.Windows.Forms.ContextMenu();
             this._editListBoxMenuItem = new System.Windows.Forms.MenuItem();
-            this._advancedEditListBoxMenuItem = new System.Windows.Forms.MenuItem();
-            this._compactListBoxMenuItem = new System.Windows.Forms.MenuItem();
             this._launchListBoxMenuItem = new System.Windows.Forms.MenuItem();
-            this._removeV2tag = new System.Windows.Forms.MenuItem();
             this.SuspendLayout();
             // 
             // _mainMenu
             // 
             this._mainMenu.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-            this._mainMenuItem});
-            // 
-            // _mainMenuItem
-            // 
-            this._mainMenuItem.Index = 0;
-            this._mainMenuItem.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this._scanMenuItem});
-            this._mainMenuItem.Text = "Main";
             // 
             // _scanMenuItem
             // 
             this._scanMenuItem.Index = 0;
-            this._scanMenuItem.Text = "Scan Directory";
+            this._scanMenuItem.Text = "浏览";
             this._scanMenuItem.Click += new System.EventHandler(this._scanMenuItem_Click);
             // 
             // _mainListBox
@@ -72,10 +61,11 @@ namespace TagEditor
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this._mainListBox.ContextMenu = this._listBoxContextMenu;
-            this._mainListBox.ItemHeight = 12;
+            this._mainListBox.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this._mainListBox.ItemHeight = 16;
             this._mainListBox.Location = new System.Drawing.Point(10, 8);
             this._mainListBox.Name = "_mainListBox";
-            this._mainListBox.Size = new System.Drawing.Size(653, 304);
+            this._mainListBox.Size = new System.Drawing.Size(653, 308);
             this._mainListBox.TabIndex = 0;
             this._mainListBox.DoubleClick += new System.EventHandler(this._mainListBox_DoubleClick);
             this._mainListBox.MouseDown += new System.Windows.Forms.MouseEventHandler(this._mainListBox_MouseDown);
@@ -84,10 +74,7 @@ namespace TagEditor
             // 
             this._listBoxContextMenu.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
             this._editListBoxMenuItem,
-            this._advancedEditListBoxMenuItem,
-            this._compactListBoxMenuItem,
-            this._launchListBoxMenuItem,
-            this._removeV2tag});
+            this._launchListBoxMenuItem});
             // 
             // _editListBoxMenuItem
             // 
@@ -95,40 +82,22 @@ namespace TagEditor
             this._editListBoxMenuItem.Text = "Edit";
             this._editListBoxMenuItem.Click += new System.EventHandler(this._mainListBoxMenu_EditTag);
             // 
-            // _advancedEditListBoxMenuItem
-            // 
-            this._advancedEditListBoxMenuItem.Index = 1;
-            this._advancedEditListBoxMenuItem.Text = "Advanced Edit";
-            this._advancedEditListBoxMenuItem.Click += new System.EventHandler(this._mainListBoxMenu_EditExtendedTag);
-            // 
-            // _compactListBoxMenuItem
-            // 
-            this._compactListBoxMenuItem.Index = 2;
-            this._compactListBoxMenuItem.Text = "Compact";
-            this._compactListBoxMenuItem.Click += new System.EventHandler(this._mainListBoxMenu_Compact);
-            // 
             // _launchListBoxMenuItem
             // 
-            this._launchListBoxMenuItem.Index = 3;
+            this._launchListBoxMenuItem.Index = 1;
             this._launchListBoxMenuItem.Text = "Launch";
             this._launchListBoxMenuItem.Click += new System.EventHandler(this._mainListBoxMenu_Launch);
-            // 
-            // _removeV2tag
-            // 
-            this._removeV2tag.Index = 4;
-            this._removeV2tag.Text = "Remove ID3V2 tag";
-            this._removeV2tag.Click += new System.EventHandler(this._removeV2tag_Click);
             // 
             // MainForm
             // 
             this.AutoScaleBaseSize = new System.Drawing.Size(6, 14);
-            this.ClientSize = new System.Drawing.Size(672, 387);
+            this.ClientSize = new System.Drawing.Size(672, 324);
             this.Controls.Add(this._mainListBox);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Menu = this._mainMenu;
             this.Name = "MainForm";
             this.Text = "MP3文件信息编辑器";
-            this.Load += new System.EventHandler(this.MainForm_Load);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Shown += new System.EventHandler(this.MainForm_Shown);
             this.ResumeLayout(false);
 
@@ -137,15 +106,12 @@ namespace TagEditor
 
         #region fields
         protected System.Windows.Forms.MainMenu _mainMenu;
-        protected System.Windows.Forms.MenuItem _mainMenuItem;
         protected System.Windows.Forms.MenuItem _scanMenuItem;
         protected System.Windows.Forms.ListBox _mainListBox;
         protected System.Windows.Forms.ContextMenu _listBoxContextMenu;
         protected System.Windows.Forms.MenuItem _editListBoxMenuItem;
-        protected System.Windows.Forms.MenuItem _advancedEditListBoxMenuItem;
-        protected System.Windows.Forms.MenuItem _compactListBoxMenuItem;
         protected System.Windows.Forms.MenuItem _launchListBoxMenuItem;
         #endregion
-        private MenuItem _removeV2tag;
+
     }
 }

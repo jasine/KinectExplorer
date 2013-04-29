@@ -42,6 +42,7 @@ namespace TagEditor
         private void MainForm_Shown( object sender, EventArgs e )
         {
            _presenter.Start();
+            _presenter.DefaultScan();
         }
         
 		private void _scanMenuItem_Click(object sender, System.EventArgs e)
@@ -107,9 +108,9 @@ namespace TagEditor
                 _presenter.RemoveV2tag((string)_mainListBox.Items[_mainListBox.SelectedIndex]);
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            _presenter.DefaultScan();
+
         }
     }
 }

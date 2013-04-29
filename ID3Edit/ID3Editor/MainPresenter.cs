@@ -94,10 +94,13 @@ namespace TagEditor
                 ScanDirectory(dirBrowser.DirectoryPath);
             }
         }
+
         public void DefaultScan()
         {
-              ScanDirectory(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic));           
+            ScanDirectory(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic));
+
         }
+
 
         private void ScanDirectory(string scandir)
         {
@@ -148,6 +151,7 @@ namespace TagEditor
                     using( new CursorKeeper(Cursors.WaitCursor) )
                     {
                         mp3File.Update();
+                        //mp3File.FileName
                     }
                 }
                 catch (Exception e)

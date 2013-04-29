@@ -35,6 +35,7 @@ namespace LeapHelper
             //controller.EnableGesture(Gesture.GestureType.TYPEKEYTAP);
             controller.EnableGesture(Gesture.GestureType.TYPESCREENTAP);
             controller.EnableGesture(Gesture.GestureType.TYPESWIPE);
+
         }
 
         public override void OnDisconnect(Controller controller)
@@ -54,14 +55,13 @@ namespace LeapHelper
 
             if (!frame.Hands.Empty)
             {               
-                if (frame.Fingers.Count>=2&&LeapFingerReady!=null)
-                {
+                if (frame.Hands.Count==2&&frame.Fingers.Count>=2&&LeapFingerReady!=null)
+                {                
                     Finger first, second;
                     if (frame.Fingers[0].Length > frame.Fingers[1].Length)
                     {
                         first = frame.Fingers[0];
-                        second = frame.Fingers[1];
-                        
+                        second = frame.Fingers[1];                   
                     }
                     else
                     {
@@ -79,7 +79,7 @@ namespace LeapHelper
                             first = frame.Fingers[i];
                         }
                     }
-                    if (first.Length>0.3&&second.Length>0.3)
+                    if (first.Length>30&&second.Length>30)
                         LeapFingerReady(this,frame.Fingers[0],frame.Fingers[1]);
                 }
 
@@ -98,9 +98,9 @@ namespace LeapHelper
                         CircleGesture circle = new CircleGesture(gesture);
 
                         // Calculate clock direction using the angle between circle normal and pointable
-                        if (circle.State == Gesture.GestureState.STATESTOP)
+                        if (circle.State == Gesture.GestureState.STATESTOP&&circle.Radius>15&&circle.Progress>0.5)
                         {
-                            if(DateTime.Now-lastTime>TimeSpan.FromMilliseconds(600))
+                            if(DateTime.Now-lastTime>TimeSpan.FromMilliseconds(1000))
                             { 
                                 LeapCircleReady(this);
                                 lastTime = DateTime.Now;
@@ -113,14 +113,20 @@ namespace LeapHelper
                         
                         if (swipe.State == Gesture.GestureState.STATESTART&&LeapSwipeReady!=null)
                         {
-                            if (swipe.Direction.x < -0.4)
-                            {
-                                LeapSwipeReady(this, SwipeType.SwipeLeft);                               
-                            }
-                            else if (swipe.Direction.x > 0.4)
-                            {
-                                LeapSwipeReady(this, SwipeType.SwipeRight);
-                            }
+                           // if (DateTime.Now - lastTime > TimeSpan.FromMilliseconds(600))
+                            //{
+                                if (swipe.Direction.x < -0.5)
+                                {
+                                    LeapSwipeReady(this, SwipeType.SwipeLeft);
+                                    lastTime = DateTime.Now;
+                                }
+                                else if (swipe.Direction.x > 0.5)
+                                {
+                                    LeapSwipeReady(this, SwipeType.SwipeRight);
+                                    lastTime = DateTime.Now;
+                                }
+                            //}
+                            
                             //else if (swipe.Direction.z < -0.2)
                             //{
                             //    LeapSwipeReady(this, SwipeType.SwpieIn);
@@ -144,8 +150,15 @@ namespace LeapHelper
                         break;
                     case Gesture.GestureType.TYPESCREENTAP:
                         ScreenTapGesture screentap = new ScreenTapGesture(gesture);
-                        
-                        if ( LeapTapScreenReady!=null&&screentap.State==Gesture.GestureState.STATESTOP)
+                        Finger first = screentap.Frame.Fingers[0];
+                        for (int j = 1; j < frame.Fingers.Count; j++)
+                        {
+                            if ( frame.Fingers[j].Length > first.Length)
+                            {
+                                first = frame.Fingers[j];
+                            }
+                        }
+                        if ( LeapTapScreenReady!=null&&screentap.State==Gesture.GestureState.STATESTOP&&first.Length>15)
                         {
                             if (DateTime.Now - lastTime > TimeSpan.FromMilliseconds(600))
                             {

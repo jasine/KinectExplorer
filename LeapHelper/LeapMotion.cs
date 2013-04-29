@@ -10,6 +10,7 @@ namespace LeapHelper
     {
         private LeapListener listener;
         private Controller controller;
+        public bool IsConnected { get; private set; }
 
         public LeapListener Listener
         {
@@ -18,15 +19,21 @@ namespace LeapHelper
 
         public LeapMotinn()
         {
-            listener = new LeapListener(); 
-            controller = new Controller();
-            controller.AddListener(listener);
+            
+            controller = new Controller();           
+            if (controller.IsConnected)
+            {
+                IsConnected = true;
+                listener = new LeapListener(); 
+                controller.AddListener(listener);
+            }
 
         }
         
         public void Close()
         {
-            controller.RemoveListener(listener);
+            if(listener!=null)
+                controller.RemoveListener(listener);
             controller.Dispose();
         }
     }

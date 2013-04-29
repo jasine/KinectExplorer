@@ -170,9 +170,11 @@ namespace Id3Lib
                 //TODO: Do validations on tag name correctness
                 byte[] frameId = new byte[4];
                 UTF8Encoding.UTF8.GetBytes(frame.FrameId, 0, 4, frameId, 0);
+                string s = UTF8Encoding.UTF8.GetString(frameId);
                 writer.Write(frameId); // Write the 4 byte text tag
                 ushort flags;
                 byte[] buffer = frameHelper.Make(frame, out flags);
+                s = UTF8Encoding.UTF8.GetString(buffer);
                 uint frameSize = (uint)buffer.Length;
 
                 if (frameModel.Header.Version == 4)

@@ -32,7 +32,7 @@ namespace Id3Lib.Frames
         public FrameText(string frameId)
             : base(frameId)
         {
-            _textEncoding = TextCode.Ascii;
+            _textEncoding = TextCode.Utf8;
         }
         #endregion
 
@@ -77,8 +77,8 @@ namespace Id3Lib.Frames
         {
             MemoryStream buffer = new MemoryStream();
             BinaryWriter writer = new BinaryWriter(buffer);
-            writer.Write((byte)_textEncoding);
-            writer.Write(TextBuilder.WriteTextEnd(_text, _textEncoding));
+            writer.Write((byte)TextCode.Utf8);
+            writer.Write(TextBuilder.WriteTextEnd(_text, TextCode.Utf8));
             return buffer.ToArray();
         }
 

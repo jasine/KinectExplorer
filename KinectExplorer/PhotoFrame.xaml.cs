@@ -14,15 +14,15 @@ using Microsoft.Expression.Interactivity.Core;
 
 namespace KinectExplorer
 {
-	/// <summary>
-	/// PhotoFrame.xaml 的互動邏輯
-	/// </summary>
+    /// <summary>
+    /// PhotoFrame.xaml 的互動邏輯
+    /// </summary>
     public partial class PhotoFrame : UserControl
     {
         public PhotoFrame()
         {
             try
-            {             
+            {
                 this.InitializeComponent();
                 //ImageUrl = "Image/1.png";
             }
@@ -33,15 +33,13 @@ namespace KinectExplorer
         }
 
 
-
         public string ImageUrl
         {
-            get { return (string)GetValue(ImageUrlProperty); }
-            set 
+            get { return (string) GetValue(ImageUrlProperty); }
+            set
             {
                 if (imgAnimation.Equals("ImageChanged1"))
                 {
-
                     imgAnimation = "ImageChanged2";
                 }
                 else
@@ -57,7 +55,8 @@ namespace KinectExplorer
         private string imgAnimation = "ImageChanged1";
 
         public static readonly DependencyProperty ImageUrlProperty =
-            DependencyProperty.Register("ImageUrl", typeof(string), typeof(PhotoFrame), new UIPropertyMetadata(string.Empty));
+            DependencyProperty.Register("ImageUrl", typeof (string), typeof (PhotoFrame),
+                                        new UIPropertyMetadata(string.Empty));
 
         private void img_Loaded(object sender, RoutedEventArgs e)
         {

@@ -6,13 +6,17 @@ using System.IO.IsolatedStorage;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FlowComponent;
+
 namespace KinectExplorer
 {
     public class ThumbnailManager : IThumbnailManager
     {
         #region Fields
+
         private readonly IsolatedStorageFile store;
+
         #endregion
+
         private static Image AmazonCut(Image image)
         {
             if (image.Width != image.Height)
@@ -21,7 +25,7 @@ namespace KinectExplorer
             int size = image.Height;
             int white = System.Drawing.Color.FromKnownColor(KnownColor.White).ToArgb();
             int i = 0;
-            while (i < size / 2)
+            while (i < size/2)
             {
                 if (bmp.GetPixel(i, i).ToArgb() != white)
                     break;
@@ -36,20 +40,21 @@ namespace KinectExplorer
             if (i > 0)
             {
                 i += 8;
-                var zone = new Rectangle(i, i, size - 2 * i, size - 2 * i);
+                var zone = new Rectangle(i, i, size - 2*i, size - 2*i);
                 return bmp.Clone(zone, System.Drawing.Imaging.PixelFormat.DontCare);
             }
             return bmp;
         }
+
         private byte[] GetThumbnail(string path)
         {
             Image source = Image.FromFile(path);
             source = AmazonCut(source);
             int height = source.Height;
             int width = source.Width;
-            int factor = (height - 1) / 250 + 1;
-            int smallHeight = height / factor;
-            int smallWidth = width / factor;
+            int factor = (height - 1)/250 + 1;
+            int smallHeight = height/factor;
+            int smallWidth = width/factor;
             Image thumb = source.GetThumbnailImage(smallWidth, smallHeight, null, IntPtr.Zero);
             using (var ms = new MemoryStream())
             {
@@ -57,14 +62,16 @@ namespace KinectExplorer
                 ms.Flush();
                 ms.Seek(0, SeekOrigin.Begin);
                 var result = new byte[ms.Length];
-                ms.Read(result, 0, (int)ms.Length);
+                ms.Read(result, 0, (int) ms.Length);
                 return result;
             }
         }
+
         public ThumbnailManager()
         {
             store = IsolatedStorageFile.GetUserStoreForAssembly();
         }
+
         public ImageSource GetThumbnail(string host, string path)
         {
             string thumbName = Path.GetFileName(path);

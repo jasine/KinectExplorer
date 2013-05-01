@@ -27,27 +27,26 @@ namespace KinectExplorer
     {
         private ImageSource img;
         private double size, w, h;
-        Storyboard stdStart, stdEnd, stdEnd2,stdVideoFinish;
+        private Storyboard stdStart, stdEnd, stdEnd2, stdVideoFinish;
         public static VideoWindow Instance { get; private set; }
-  
+
         private string fileName;
 
-        IMediaPlayerFactory m_factory;
-        IVideoPlayer m_player;
-        IMedia m_media;
+        private IMediaPlayerFactory m_factory;
+        private IVideoPlayer m_player;
+        private IMedia m_media;
 
         public static VideoWindow GetInstance(FileInfo imgSrc, FileInfo videoSrc)
         {
             if (Instance != null)
                 Instance.Close();
-            Instance=new VideoWindow(imgSrc,videoSrc);
+            Instance = new VideoWindow(imgSrc, videoSrc);
             return Instance;
         }
 
-        private VideoWindow(FileInfo imgSrc,FileInfo videoSrc)
-        //public VideoWindow()
+        private VideoWindow(FileInfo imgSrc, FileInfo videoSrc)
+            //public VideoWindow()
         {
-
             InitializeComponent();
 
             this.Width = SystemParameters.PrimaryScreenWidth;
@@ -64,87 +63,82 @@ namespace KinectExplorer
             //根据分辨率不同，调整DetialWindow出现的位置
             if (this.Width > 1300)
             {
-                size = SystemParameters.PrimaryScreenWidth * 0.415;
+                size = SystemParameters.PrimaryScreenWidth*0.415;
             }
             else if (this.Width < 1300 && this.Width > 1000)
             {
-                size = SystemParameters.PrimaryScreenWidth * 0.3;
+                size = SystemParameters.PrimaryScreenWidth*0.3;
             }
             if (img.Width >= img.Height)
             {
                 w = size;
-                h = size / img.Width * img.Height;
+                h = size/img.Width*img.Height;
             }
             else
             {
                 h = size;
-                w = size / img.Height * img.Width;
+                w = size/img.Height*img.Width;
             }
             gd.Background = new ImageBrush(img);
 
 
-            stdStart = (Storyboard)this.Resources["start"];
-            stdEnd = (Storyboard)this.Resources["end"];
-            stdEnd2 = (Storyboard)this.Resources["end_2"];
+            stdStart = (Storyboard) this.Resources["start"];
+            stdEnd = (Storyboard) this.Resources["end"];
+            stdEnd2 = (Storyboard) this.Resources["end_2"];
             stdVideoFinish = (Storyboard) Resources["VideoFinish"];
 
             stdStart.Completed += (a, b) =>
-            {
-                //stdMiddle.Begin();
-                TimeSplit.Visibility=Visibility.Visible;
-                var datPrs = new DoubleAnimation(0, 600, new Duration(TimeSpan.FromMilliseconds(1000)));
-                process.BeginAnimation(ProgressBar.WidthProperty, datPrs);
+                {
+                    //stdMiddle.Begin();
+                    TimeSplit.Visibility = Visibility.Visible;
+                    var datPrs = new DoubleAnimation(0, 600, new Duration(TimeSpan.FromMilliseconds(1000)));
+                    process.BeginAnimation(ProgressBar.WidthProperty, datPrs);
 
-                ///播放视频
-                m_media = m_factory.CreateMedia<IMediaFromFile>(fileName);
-                m_media.Events.DurationChanged += Events_DurationChanged;
-                m_media.Events.StateChanged += Events_StateChanged;               
-                m_player.Open(m_media);
-                
-                m_media.Parse(true);
-                m_player.Play();
-                //System.Drawing.Size s = m_player.GetVideoSize(0);
-                //m_player.TakeSnapShot(0, @"C:\");
-                DispatcherTimer timer=new DispatcherTimer();
-                timer.Interval = TimeSpan.FromMilliseconds(1000);
-                timer.Tick += (c, d) =>
-                    {
-                        gd.Background = null;   
-                        timer.Stop();
-                    };
-                timer.Start();
-            };
+                    ///播放视频
+                    m_media = m_factory.CreateMedia<IMediaFromFile>(fileName);
+                    m_media.Events.DurationChanged += Events_DurationChanged;
+                    m_media.Events.StateChanged += Events_StateChanged;
+                    m_player.Open(m_media);
+
+                    m_media.Parse(true);
+                    m_player.Play();
+                    //System.Drawing.Size s = m_player.GetVideoSize(0);
+                    //m_player.TakeSnapShot(0, @"C:\");
+                    DispatcherTimer timer = new DispatcherTimer();
+                    timer.Interval = TimeSpan.FromMilliseconds(1000);
+                    timer.Tick += (c, d) =>
+                        {
+                            gd.Background = null;
+                            timer.Stop();
+                        };
+                    timer.Start();
+                };
 
             stdEnd.Completed += (c, d) =>
-            {
-                CloseAnmit();
-                stdEnd2.Begin();
-
-            };
-            stdEnd2.Completed += (e, f) =>
                 {
-                    this.Close();
+                    CloseAnmit();
+                    stdEnd2.Begin();
                 };
+            stdEnd2.Completed += (e, f) => { this.Close(); };
             this.Loaded += MainWindow_Loaded;
 
             m_factory = new MediaPlayerFactory();
             m_player = m_factory.CreatePlayer<IVideoPlayer>();
             m_videoImage.Initialize(m_player.CustomRendererEx);
 
-            m_player.Events.PlayerPositionChanged += new EventHandler<MediaPlayerPositionChanged>(Events_PlayerPositionChanged);
+            m_player.Events.PlayerPositionChanged +=
+                new EventHandler<MediaPlayerPositionChanged>(Events_PlayerPositionChanged);
             m_player.Events.TimeChanged += new EventHandler<MediaPlayerTimeChanged>(Events_TimeChanged);
             m_player.Events.MediaEnded += new EventHandler(Events_MediaEnded);
             m_player.Events.PlayerStopped += new EventHandler(Events_PlayerStopped);
-            
-
         }
 
-        void Events_PlayerStopped(object sender, EventArgs e)
+        private void Events_PlayerStopped(object sender, EventArgs e)
         {
             this.Dispatcher.BeginInvoke(new Action(InitControls));
         }
 
-        void Events_MediaEnded(object sender, EventArgs e)
+        private void Events_MediaEnded(object sender, EventArgs e)
         {
             this.Dispatcher.BeginInvoke(new Action(InitControls));
         }
@@ -161,50 +155,44 @@ namespace KinectExplorer
             //stdVideoFinish.Completed += (a, b) => CloseThis();
         }
 
-        void Events_TimeChanged(object sender, MediaPlayerTimeChanged e)
+        private void Events_TimeChanged(object sender, MediaPlayerTimeChanged e)
         {
-            this.Dispatcher.BeginInvoke(new Action(delegate
-            {
-                TimeNow.Content = TimeSpan.FromMilliseconds(e.NewTime).ToString().Substring(0, 8);               
-            }));
+            this.Dispatcher.BeginInvoke(
+                new Action(
+                    delegate { TimeNow.Content = TimeSpan.FromMilliseconds(e.NewTime).ToString().Substring(0, 8); }));
         }
 
-        void Events_PlayerPositionChanged(object sender, MediaPlayerPositionChanged e)
+        private void Events_PlayerPositionChanged(object sender, MediaPlayerPositionChanged e)
         {
-            this.Dispatcher.BeginInvoke(new Action(delegate
-            {               
-                 process.Value = (double)e.NewPosition*100;             
-            }));
+            this.Dispatcher.BeginInvoke(new Action(delegate { process.Value = (double) e.NewPosition*100; }));
         }
 
-        void Events_StateChanged(object sender, MediaStateChange e)
+        private void Events_StateChanged(object sender, MediaStateChange e)
         {
-            this.Dispatcher.BeginInvoke(new Action(delegate
-            {
-
-            }));
+            this.Dispatcher.BeginInvoke(new Action(delegate { }));
         }
 
-        void Events_DurationChanged(object sender, MediaDurationChange e)
+        private void Events_DurationChanged(object sender, MediaDurationChange e)
         {
-            this.Dispatcher.BeginInvoke(new Action(delegate
-            {
-                TimeTotal.Content = TimeSpan.FromMilliseconds(e.NewDuration).ToString().Substring(0, 8);
-            }));
+            this.Dispatcher.BeginInvoke(
+                new Action(
+                    delegate
+                        { TimeTotal.Content = TimeSpan.FromMilliseconds(e.NewDuration).ToString().Substring(0, 8); }));
         }
 
-        void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             stdStart.Begin();
             //stdMiddle.Begin();
-            playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\pause.png")); playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\pause.png"));
+            playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\pause.png"));
+            playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\pause.png"));
             double w2 = img.Width, h2 = img.Height;
 
-            double times1 = img.Width / (SystemParameters.PrimaryScreenWidth - 80.0);
-            double times2 = img.Height / (SystemParameters.PrimaryScreenHeight - 60.0);
+            double times1 = img.Width/(SystemParameters.PrimaryScreenWidth - 80.0);
+            double times2 = img.Height/(SystemParameters.PrimaryScreenHeight - 60.0);
             double times = times1 > times2 ? times1 : times2;
-            w2 = w2 / times;
-            h2 = h2 / times;
+            w2 = w2/times;
+            h2 = h2/times;
 
             var opacityGrid = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0)));
             var widthx = new DoubleAnimation(w, w2, new Duration(TimeSpan.FromMilliseconds(500)));
@@ -213,9 +201,8 @@ namespace KinectExplorer
             gd.BeginAnimation(Grid.OpacityProperty, opacityGrid);
             gd.BeginAnimation(Grid.WidthProperty, widthx);
             gd.BeginAnimation(Grid.HeightProperty, heightx);
-
         }
-       
+
 
         public void CloseThis()
         {
@@ -223,16 +210,16 @@ namespace KinectExplorer
             playStatue.Opacity = 0;
             m_player.Stop();
             stdEnd.Begin();
-            TimeNow.Visibility=Visibility.Collapsed;
-            TimeSplit.Visibility=Visibility.Collapsed;
-            TimeTotal.Visibility = Visibility.Collapsed; ;
+            TimeNow.Visibility = Visibility.Collapsed;
+            TimeSplit.Visibility = Visibility.Collapsed;
+            TimeTotal.Visibility = Visibility.Collapsed;
+            ;
             var datPrs = new DoubleAnimation(600, 0, new Duration(TimeSpan.FromMilliseconds(600)));
             process.BeginAnimation(ProgressBar.WidthProperty, datPrs);
         }
 
         private void CloseAnmit()
         {
-
             //var opacityGrid = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0)));
             var widthx = new DoubleAnimation(gd.ActualWidth, w, new Duration(TimeSpan.FromMilliseconds(300)));
             var heightx = new DoubleAnimation(gd.ActualHeight, h, new Duration(TimeSpan.FromMilliseconds(300)));
@@ -254,10 +241,6 @@ namespace KinectExplorer
             CloseThis();
         }
 
-
-       
-
-        
 
         private void gd_MouseEnter(object sender, MouseEventArgs e)
         {
@@ -303,7 +286,7 @@ namespace KinectExplorer
         private void process_MouseDown(object sender, MouseButtonEventArgs e)
         {
             Point p = e.GetPosition(process);
-            double precent = p.X / process.Width;
+            double precent = p.X/process.Width;
             ChangePlayingTime(precent);
         }
 
@@ -311,19 +294,19 @@ namespace KinectExplorer
         {
             precent = precent > 1 ? 1 : precent;
             precent = precent < 0 ? 0 : precent;
-            m_player.Position = (float)precent;
+            m_player.Position = (float) precent;
             process.Value = precent*100;
         }
 
 
         public void Forword()
         {
-            ChangePlayingTime(m_player.Position=(float)(m_player.Position+0.1));
+            ChangePlayingTime(m_player.Position = (float) (m_player.Position + 0.1));
         }
 
         public void Backword()
         {
-            ChangePlayingTime(m_player.Position = (float)(m_player.Position - 0.1));
+            ChangePlayingTime(m_player.Position = (float) (m_player.Position - 0.1));
         }
 
 
@@ -332,7 +315,6 @@ namespace KinectExplorer
             m_player.Stop();
             m_player.Dispose();
             m_media.Dispose();
-           
         }
     }
 }

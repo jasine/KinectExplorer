@@ -23,21 +23,22 @@ namespace KinectExplorer
                 }
                 else
                 {
-                    BitmapFrame bit = BitmapFrame.Create(new Uri(fullname, UriKind.Relative), BitmapCreateOptions.DelayCreation, BitmapCacheOption.Default);
+                    BitmapFrame bit = BitmapFrame.Create(new Uri(fullname, UriKind.Relative),
+                                                         BitmapCreateOptions.DelayCreation, BitmapCacheOption.Default);
 
                     bs = bit.Thumbnail == null ? bit : bit.Thumbnail;
-
                 }
             }
-            catch (Exception ex)
+            catch (Exception )
             {
-                throw ex;
+                throw ;
             }
 
             return bs;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter,
+                                  System.Globalization.CultureInfo culture)
         {
             throw new NotImplementedException();
         }

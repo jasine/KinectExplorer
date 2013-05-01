@@ -205,12 +205,12 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomControlLib\CustomControlLib.csproj">
-      <Project>{021999B4-8C61-45F2-8C4E-80A08FC5CA19}</Project>
+      <Project>{021999b4-8c61-45f2-8c4e-80a08fc5ca19}</Project>
       <Name>CustomControlLib</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DoubanFM.Bass\DoubanFM.Bass.csproj">
+    <ProjectReference Include="..\DoubanFM.Bass\MusicPlayer.csproj">
       <Project>{62324cfd-03ff-44b4-9204-66bae86972b6}</Project>
-      <Name>DoubanFM.Bass</Name>
+      <Name>MusicPlayer</Name>
     </ProjectReference>
     <ProjectReference Include="..\Fizbin.Kinect.Gestures\Fizbin.Kinect.Gestures.csproj">
       <Project>{7471719c-9bd5-42ba-b42b-bb5663eebbc3}</Project>
@@ -285,18 +285,9 @@
     <EmbeddedResource Include="music.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-    <Content Include="Taygeta.Controls.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Taygeta.Core.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <EmbeddedResource Include="video.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

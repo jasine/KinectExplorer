@@ -9,7 +9,7 @@ using Implementation;
 
 namespace KinectExplorer
 {
-    class VideoUnity
+    internal class VideoUnity
     {
         /// <summary>
         /// 截取视频缩略图
@@ -24,7 +24,7 @@ namespace KinectExplorer
             string flvImgSize = "640*480";
             MediaPlayerFactory m_factory = new MediaPlayerFactory();
             IVideoPlayer m_player = m_factory.CreatePlayer<IVideoPlayer>();
-            IMediaFromFile m_media = m_factory.CreateMedia<IMediaFromFile>(fileName);            
+            IMediaFromFile m_media = m_factory.CreateMedia<IMediaFromFile>(fileName);
             m_player.Open(m_media);
             m_media.Parse(true);
 
@@ -34,7 +34,8 @@ namespace KinectExplorer
             //m_player.TakeSnapShot(1, @"C:");
             System.Diagnostics.ProcessStartInfo ImgstartInfo = new System.Diagnostics.ProcessStartInfo(ffmpeg);
             ImgstartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-            ImgstartInfo.Arguments = "   -i   " + fileName + "  -y  -f  image2   -ss 2 -vframes 1  -s   " + flvImgSize + "   " + imgFile;
+            ImgstartInfo.Arguments = "   -i   " + fileName + "  -y  -f  image2   -ss 2 -vframes 1  -s   " + flvImgSize +
+                                     "   " + imgFile;
             try
             {
                 System.Diagnostics.Process.Start(ImgstartInfo);
@@ -46,6 +47,5 @@ namespace KinectExplorer
             }
             return true;
         }
-
     }
 }

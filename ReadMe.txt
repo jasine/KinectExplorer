@@ -1,13 +1,13 @@
-1.ÒıÓÃÁËWPFSoundVisualizationLibrary http://wpfsvl.codeplex.com/ Ìá¹©ÆµÆ×ÏÔÊ¾
-2.ÒıÓÃÁË"¶¹°êµçÌ¨" http://doubanfm.codeplex.com/ ÖĞ¶ÔÉùÒô²¥·ÅµÄ²Ù×÷ÏîÄ¿Douban.Bass(ÒıÓÃÁËBassÒıÇæ)
-3.ÒıÓÃÁËC# ID3 Libbrary http://sourceforge.net/projects/csid3lib/ ¶ÁÈ¡mp3ÎÄ¼şµÄID3×ÊÁÏ£¬²¢ĞŞ¸ÄÊ¾ÁĞ×÷ÎªÒôÀÖÎÄ¼şĞÅÏ¢ĞŞ¸ÄÆ÷
-4.ÒıÓÃÁËFizbin.Kinect.Gestures https://github.com/EvilClosetMonkey/Fizbin.Kinect.Gestures ²¢×öÁËÀ©Õ¹£¬²¶×½ºÍÖ§³Ö¸ü¶à¶¯×÷
-5.ÒıÓÃÁËÎ¢ÈíSDKÖĞ SampleÖĞµÄ Microsoft.Samples.Kinect.SwipeGestureRecognizer.dll ÒÔ¶Ô×óÓÒ»¬¶¯Ìá¹©¸üºÃÖ§³Ö
-6.ÒıÓÃÁË http://d3dal3.blogspot.com/2009/04/wpf-cover-flow-tutorial-part-7-source.html ÖĞµÄCoverFlowĞ§¹û£¬²¢×öÁËÊÊµ±ĞŞ¸Ä£¬Ê¹ÌáÉıÈ«ÆÁĞÔÄÜ
-7.ÒıÓÃÁË Coding4Fun Kinect ToolkitÖĞµÄHoverButton http://c4fkinect.codeplex.com/
-8.ÒıÓÃÁËnvlc·â×°µÄvlc¿â£¬²¢ĞŞ¸ÄºÍÊ¹ÓÃÁËwpfÊ¾Àı³ÌĞòµÄ²¿·Ö´úÂë http://www.codeproject.com/Articles/109639/nVLC
-9.ÒıÓÃÁËffmpeg½ØÈ¡ÊÓÆµËõÂÔÍ¼
-10.ÒıÓÃTransitionControlDemoÖĞµÄÍ¼Æ¬ÇĞ»»Ğ§¹û(À´Ô´ÓëInternet,³ö´¦²»Ïê)
+ï»¿1.å¼•ç”¨äº†WPFSoundVisualizationLibrary http://wpfsvl.codeplex.com/ æä¾›é¢‘è°±æ˜¾ç¤º
+2.å¼•ç”¨äº†"è±†ç“£ç”µå°" http://doubanfm.codeplex.com/ ä¸­å¯¹å£°éŸ³æ’­æ”¾çš„æ“ä½œé¡¹ç›®Douban.Bass(å¼•ç”¨äº†Basså¼•æ“)
+3.å¼•ç”¨äº†C# ID3 Libbrary http://sourceforge.net/projects/csid3lib/ è¯»å–mp3æ–‡ä»¶çš„ID3èµ„æ–™ï¼Œå¹¶ä¿®æ”¹ç¤ºåˆ—ä½œä¸ºéŸ³ä¹æ–‡ä»¶ä¿¡æ¯ä¿®æ”¹å™¨
+4.å¼•ç”¨äº†Fizbin.Kinect.Gestures https://github.com/EvilClosetMonkey/Fizbin.Kinect.Gestures å¹¶åšäº†æ‰©å±•ï¼Œæ•æ‰å’Œæ”¯æŒæ›´å¤šåŠ¨ä½œ
+5.å¼•ç”¨äº†å¾®è½¯SDKä¸­ Sampleä¸­çš„ Microsoft.Samples.Kinect.SwipeGestureRecognizer.dll ä»¥å¯¹å·¦å³æ»‘åŠ¨æä¾›æ›´å¥½æ”¯æŒ
+6.å¼•ç”¨äº† http://d3dal3.blogspot.com/2009/04/wpf-cover-flow-tutorial-part-7-source.html ä¸­çš„CoverFlowæ•ˆæœï¼Œå¹¶åšäº†é€‚å½“ä¿®æ”¹ï¼Œä½¿æå‡å…¨å±æ€§èƒ½
+7.å¼•ç”¨äº† Coding4Fun Kinect Toolkitä¸­çš„HoverButton http://c4fkinect.codeplex.com/
+8.å¼•ç”¨äº†nvlcå°è£…çš„vlcåº“ï¼Œå¹¶ä¿®æ”¹å’Œä½¿ç”¨äº†wpfç¤ºä¾‹ç¨‹åºçš„éƒ¨åˆ†ä»£ç  http://www.codeproject.com/Articles/109639/nVLC
+9.å¼•ç”¨äº†ffmpegæˆªå–è§†é¢‘ç¼©ç•¥å›¾
+10.å¼•ç”¨TransitionControlDemoä¸­çš„å›¾ç‰‡åˆ‡æ¢æ•ˆæœ(æ¥æºä¸Internet,å‡ºå¤„ä¸è¯¦)
 
 
 jasine   jasinechen@gmail.com   Twitter @jasinechen  Weibo @jasine

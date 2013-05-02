@@ -129,7 +129,7 @@ namespace KinectExplorer
             {
                 var dat2 = new DoubleAnimation(0, -40, new Duration(TimeSpan.FromMilliseconds(500)));
                 tlt.BeginAnimation(TranslateTransform.YProperty, dat2);
-                gdCenter.Y = -50;
+                gdCenter.Y = -40;
             }
                     
 

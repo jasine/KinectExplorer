@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -18,11 +17,13 @@ namespace KinectExplorer
     /// <summary>
     /// DetialWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class MusicWindow : Window
+    public partial class MusicWindow 
     {
-        private ImageSource img;
-        private double size, w, h;
-        private Storyboard stdStart, stdEnd, std_MusicFinish, stdEnd2;
+        private readonly ImageSource _img;
+        private readonly double _w,_h,_size;
+        private readonly Storyboard _stdMusicFinish,_stdEnd2;
+        private Storyboard _stdEnd;
+        private readonly Storyboard _stdStart;
         //private Point lastCenter;
         public static MusicWindow Instace { get; private set; }
 
@@ -34,37 +35,37 @@ namespace KinectExplorer
             return Instace;
         }
 
-        private DispatcherTimer timerLyric, timerPhoto;
-        private string fileName;
-        private int photoIndex;
+        private readonly DispatcherTimer _timerLyric;
+        private readonly DispatcherTimer _timerPhoto;
+        private readonly string _fileName;
+        private int _photoIndex;
 
         private MusicWindow(FileInfo imgSrc)
         {
             InitializeComponent();
             SpectrumAnalyzer.RegisterSoundPlayer(BassEngine.Instance);
             string file = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) + @"\" +
-                          System.IO.Path.GetFileNameWithoutExtension(imgSrc.Name) + ".mp3";
-            fileName = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) + @"\Lyrics\"
-                       + System.IO.Path.GetFileNameWithoutExtension(imgSrc.Name) + ".lrc";
+                          Path.GetFileNameWithoutExtension(imgSrc.Name) + ".mp3";
+            _fileName = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) + @"\Lyrics\"
+                       + Path.GetFileNameWithoutExtension(imgSrc.Name) + ".lrc";
 
-            TagHandler _tagHandler = new TagHandler(new Mp3File(file).TagModel);
-            ItemTitle.Text = _tagHandler.Title != ""
-                                 ? _tagHandler.Title
-                                 : System.IO.Path.GetFileNameWithoutExtension(imgSrc.Name);
-            OrilTime.Text = _tagHandler.Track != "" ? "发源时间：" + _tagHandler.Genre : "";
+            TagHandler tagHandler = new TagHandler(new Mp3File(file).TagModel);
+            ItemTitle.Text = tagHandler.Title != ""
+                                 ? tagHandler.Title
+                                 : Path.GetFileNameWithoutExtension(imgSrc.Name);
+            OrilTime.Text = tagHandler.Track != "" ? "发源时间：" + tagHandler.Genre : "";
 
-            Kind.Text = _tagHandler.Track != "" ? "类别：" + _tagHandler.Artist : "";
-                // != "" ? _tagHandler.Artist : "未知类别";
-            OrilLoca.Text = _tagHandler.Track != "" ? "起源地：" + _tagHandler.Album : "";
-                // != "" ? "《" + _tagHandler.Album + "》" : "未知专辑";
-            Year.Text = _tagHandler.Track != "" ? "入遗时间：" + _tagHandler.Year : "";
-            Rank.Text = _tagHandler.Track != "" ? "级别：" + _tagHandler.Track : "";
+            Kind.Text = tagHandler.Track != "" ? "类别：" + tagHandler.Artist : "";
+            // != "" ? _tagHandler.Artist : "未知类别";
+            OrilLoca.Text = tagHandler.Track != "" ? "起源地：" + tagHandler.Album : "";
+            // != "" ? "《" + _tagHandler.Album + "》" : "未知专辑";
+            Year.Text = tagHandler.Track != "" ? "入遗时间：" + tagHandler.Year : "";
+            Rank.Text = tagHandler.Track != "" ? "级别：" + tagHandler.Track : "";
 
 
-            timerLyric = new DispatcherTimer();
-            timerLyric.Interval = TimeSpan.FromMilliseconds(200);
-            timerLyric.Tick += (a, b) => { ShowLyric(); };
-            timerLyric.Start();
+            _timerLyric = new DispatcherTimer {Interval = TimeSpan.FromMilliseconds(200)};
+            _timerLyric.Tick += (a, b) => ShowLyric();
+            _timerLyric.Start();
 
             DirectoryInfo phothDir =
                 new DirectoryInfo(imgSrc.Directory.FullName + @"\" + Path.GetFileNameWithoutExtension(imgSrc.Name));
@@ -78,50 +79,50 @@ namespace KinectExplorer
                 photos.AddRange(phothDir.GetFiles("*.jpg", SearchOption.AllDirectories));
                 photos.AddRange(phothDir.GetFiles("*.png", SearchOption.AllDirectories));
                 photos.Add(imgSrc);
-                timerPhoto = new DispatcherTimer {Interval = TimeSpan.FromSeconds(4)};
-                timerPhoto.Tick += (a, b) =>
+                _timerPhoto = new DispatcherTimer {Interval = TimeSpan.FromSeconds(4)};
+                _timerPhoto.Tick += (a, b) =>
                     {
-                        photo.ImageUrl = photos[photoIndex++].FullName;
-                        photoIndex = photoIndex%photos.Count;
+                        photo.ImageUrl = photos[_photoIndex++].FullName;
+                        _photoIndex = _photoIndex%photos.Count;
                     };
-                timerPhoto.Start();
+                _timerPhoto.Start();
             }
 
-            this.Width = SystemParameters.PrimaryScreenWidth;
-            this.Height = SystemParameters.PrimaryScreenHeight;
-            this.Left = 0;
-            this.Top = 0;
+            Width = SystemParameters.PrimaryScreenWidth;
+            Height = SystemParameters.PrimaryScreenHeight;
+            Left = 0;
+            Top = 0;
             // this.Topmost = true;
 
-            img = new BitmapImage(new Uri(imgSrc.FullName));
+            _img = new BitmapImage(new Uri(imgSrc.FullName));
 
             //根据分辨率不同，调整DetialWindow出现的位置
-            if (this.Width > 1300)
+            if (Width > 1300)
             {
-                size = SystemParameters.PrimaryScreenWidth*0.415;
+                _size = SystemParameters.PrimaryScreenWidth*0.415;
             }
-            else if (this.Width < 1300 && this.Width > 1000)
+            else if (Width < 1300 && Width > 1000)
             {
-                size = SystemParameters.PrimaryScreenWidth*0.3;
+                _size = SystemParameters.PrimaryScreenWidth*0.3;
             }
-            gd.Background = new ImageBrush(img);
-            if (img.Width >= img.Height)
+            gd.Background = new ImageBrush(_img);
+            if (_img.Width >= _img.Height)
             {
-                w = size;
-                h = size/img.Width*img.Height;
+                _w = _size;
+                _h = _size/_img.Width*_img.Height;
             }
             else
             {
-                h = size;
-                w = size/img.Height*img.Width;
+                _h = _size;
+                _w = _size/_img.Height*_img.Width;
             }
 
-            stdStart = (Storyboard) this.Resources["start"];
-            std_MusicFinish = (Storyboard) this.Resources["MusicFinish"];
-            stdEnd = (Storyboard) this.Resources["end"];
-            stdEnd2 = (Storyboard) this.Resources["end_2"];
+            _stdStart = (Storyboard) Resources["start"];
+            _stdMusicFinish = (Storyboard) Resources["MusicFinish"];
+            _stdEnd = (Storyboard) Resources["end"];
+            _stdEnd2 = (Storyboard) Resources["end_2"];
 
-            stdStart.Completed += (a, b) =>
+            _stdStart.Completed += (a, b) =>
                 {
                     //stdMiddle.Begin();
                     MusicInfo.Visibility = Visibility.Visible;
@@ -133,15 +134,15 @@ namespace KinectExplorer
 
                     tlt.BeginAnimation(TranslateTransform.XProperty, datImg);
                     infoTlt.BeginAnimation(TranslateTransform.XProperty, datInfo);
-                    process.BeginAnimation(ProgressBar.WidthProperty, datPrs);
+                    process.BeginAnimation(WidthProperty, datPrs);
                 };
-            stdEnd.Completed += (c, d) =>
+            _stdEnd.Completed += (c, d) =>
                 {
                     CloseAnmit();
-                    stdEnd2.Begin();
+                    _stdEnd2.Begin();
                 };
-            stdEnd2.Completed += (e, f) => { this.Close(); };
-            this.Loaded += MainWindow_Loaded;
+            _stdEnd2.Completed += (e, f) => Close();
+            Loaded += MainWindow_Loaded;
         }
 
 
@@ -152,24 +153,25 @@ namespace KinectExplorer
         {
             string sss = BassEngine.Instance.ChannelPosition.Minutes.ToString("00") + ":" +
                          BassEngine.Instance.ChannelPosition.Seconds.ToString("00");
-            if (!System.IO.File.Exists(fileName))
+            if (!File.Exists(_fileName))
             {
                 lyric.Text = "";
             }
             else
             {
-                string sttr = "";
+                string sttr;
                 UTF8Encoding encode = new UTF8Encoding();
-                StreamReader objFile = new StreamReader(fileName, encode);
+                StreamReader objFile = new StreamReader(_fileName, encode);
                 sttr = objFile.ReadLine();
                 while (sttr != null)
                 {
-                    int temp = sttr.IndexOf(sss);
+                    int temp = sttr.IndexOf(sss, StringComparison.Ordinal);
                     if (temp != -1)
                     {
-                        lyric.Text =
-                            (sttr.Substring(sttr.LastIndexOf("]") + 1, sttr.Length - sttr.LastIndexOf("]") - 1) +
-                             "\r\n");
+                        if (sttr.Length > sttr.LastIndexOf("]", StringComparison.Ordinal) + 1)
+                            lyric.Text =
+                                (sttr.Substring(sttr.LastIndexOf("]", StringComparison.Ordinal) + 1, sttr.Length - sttr.LastIndexOf("]", StringComparison.Ordinal) - 1) +
+                                 "\r\n");
                     }
                     sttr = objFile.ReadLine();
                 }
@@ -184,18 +186,18 @@ namespace KinectExplorer
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            stdStart.Begin();
+            _stdStart.Begin();
             //stdMiddle.Begin();
-            playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\pause.png"));
-            playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\pause.png"));
+            playStatue.Source = new BitmapImage(new Uri(Environment.CurrentDirectory + @"\pause.png"));
+            playStatue.Source = new BitmapImage(new Uri(Environment.CurrentDirectory + @"\pause.png"));
 
             var opacityGrid = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0)));
-            var widthx = new DoubleAnimation(w, 400, new Duration(TimeSpan.FromMilliseconds(500)));
-            var heightx = new DoubleAnimation(h, 400, new Duration(TimeSpan.FromMilliseconds(500)));
+            var widthx = new DoubleAnimation(_w, 400, new Duration(TimeSpan.FromMilliseconds(500)));
+            var heightx = new DoubleAnimation(_h, 400, new Duration(TimeSpan.FromMilliseconds(500)));
 
-            gd.BeginAnimation(Grid.OpacityProperty, opacityGrid);
-            gd.BeginAnimation(Grid.WidthProperty, widthx);
-            gd.BeginAnimation(Grid.HeightProperty, heightx);
+            gd.BeginAnimation(OpacityProperty, opacityGrid);
+            gd.BeginAnimation(WidthProperty, widthx);
+            gd.BeginAnimation(HeightProperty, heightx);
 
             var datImg = new DoubleAnimation(0, -1*SystemParameters.PrimaryScreenHeight*0.1,
                                              new Duration(TimeSpan.FromMilliseconds(500)));
@@ -207,11 +209,11 @@ namespace KinectExplorer
 
         public void CloseThis()
         {
-            if (stdEnd != null)
+            if (_stdEnd != null)
             {
-                std_MusicFinish.Begin();
+                _stdMusicFinish.Begin();
                 playStatue.Opacity = 0;
-                timerLyric.Stop();
+                _timerLyric.Stop();
                 //timerLyric = null;
                 lyric.Text = "";
                 var datImg = new DoubleAnimation(-1*SystemParameters.PrimaryScreenWidth*0.2, 0,
@@ -221,8 +223,8 @@ namespace KinectExplorer
                 tlt.BeginAnimation(TranslateTransform.XProperty, datImg);
                 infoTlt.BeginAnimation(TranslateTransform.XProperty, datInfo);
                 BassEngine.Instance.Stop();
-                stdEnd.Begin();
-                stdEnd = null;
+                _stdEnd.Begin();
+                _stdEnd = null;
             }
         }
 
@@ -230,12 +232,12 @@ namespace KinectExplorer
         {
             MusicInfo.Visibility = Visibility.Hidden;
             //var opacityGrid = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0)));
-            var widthx = new DoubleAnimation(gd.ActualWidth, w, new Duration(TimeSpan.FromMilliseconds(300)));
-            var heightx = new DoubleAnimation(gd.ActualHeight, h, new Duration(TimeSpan.FromMilliseconds(300)));
+            var widthx = new DoubleAnimation(gd.ActualWidth, _w, new Duration(TimeSpan.FromMilliseconds(300)));
+            var heightx = new DoubleAnimation(gd.ActualHeight, _h, new Duration(TimeSpan.FromMilliseconds(300)));
 
             //wb.BeginAnimation(Grid.OpacityProperty, opacityGrid);
-            gd.BeginAnimation(Grid.WidthProperty, widthx);
-            gd.BeginAnimation(Grid.HeightProperty, heightx);
+            gd.BeginAnimation(WidthProperty, widthx);
+            gd.BeginAnimation(HeightProperty, heightx);
 
             var datImg = new DoubleAnimation(-1*SystemParameters.PrimaryScreenHeight*0.1, 0,
                                              new Duration(TimeSpan.FromMilliseconds(300)));
@@ -261,7 +263,6 @@ namespace KinectExplorer
         {
             if (BassEngine.Instance.ChannelPosition.Seconds >= 1)
             {
-                Visibility vi = gd.Visibility;
                 //var opacityImg = new DoubleAnimation(07, 0, new Duration(TimeSpan.FromSeconds(1000)));
                 //playStatue.BeginAnimation(Image.OpacityProperty, opacityImg);
                 playStatue.Opacity = 0.7;
@@ -284,19 +285,19 @@ namespace KinectExplorer
 
         public void ChangeStatue()
         {
-            if (BassEngine.Instance.CanPause == true)
+            if (BassEngine.Instance.CanPause)
             {
-                playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\play.png"));
-                timerLyric.Stop();
-                timerPhoto.Stop();
+                playStatue.Source = new BitmapImage(new Uri(Environment.CurrentDirectory + @"\play.png"));
+                _timerLyric.Stop();
+                _timerPhoto.Stop();
                 BassEngine.Instance.Pause();
                 playStatue.Opacity = 0.7;
             }
             else
             {
-                playStatue.Source = new BitmapImage(new Uri(System.Environment.CurrentDirectory + @"\pause.png"));
-                timerLyric.Start();
-                timerPhoto.Start();
+                playStatue.Source = new BitmapImage(new Uri(Environment.CurrentDirectory + @"\pause.png"));
+                _timerLyric.Start();
+                _timerPhoto.Start();
                 BassEngine.Instance.Play();
                 playStatue.Opacity = 0;
             }

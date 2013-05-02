@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
-using System.Drawing;
+﻿using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using System;
@@ -12,204 +10,343 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using DeviceHelper;
 using DoubanFM.Bass;
-using Fizbin.Kinect.Gestures;
-using Fizbin.Kinect.Gestures.Segments;
 using Id3Lib;
+using Leap;
 using Microsoft.Kinect;
-using Microsoft.Samples.Kinect.SwipeGestureRecognizer;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
-using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
-using LeapHelper;
 using Mp3Lib;
+using Path = System.IO.Path;
+
 
 namespace KinectExplorer
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow 
     {
-        private class FileInfoComparer : IComparer<FileInfo>
-        {
-            #region IComparer<FileInfo> Membres
+        #region 私有变量
 
-            public int Compare(FileInfo x, FileInfo y)
-            {
-                return string.Compare(x.FullName, y.FullName);
-            }
+        private readonly LeapHelper _leapHelper;
+        private readonly KinectHelper _kinectHelper;
 
-            #endregion
-        }
+        private List<FileInfo> _images;
+        private int _currentIndex;
 
-        #region Handlers
+        private DirectoryInfo _myMusicDir, _myCoverDir, _myLyricDir, _myVideoDir;
 
-        private void DoKeyDown(Key key)
-        {
-            switch (key)
-            {
-                case Key.Right:
-                    flow.GoToNext();
-                    break;
-                case Key.Left:
-                    flow.GoToPrevious();
-                    break;
-                case Key.PageUp:
-                    flow.GoToNextPage();
-                    break;
-                case Key.PageDown:
-                    flow.GoToPreviousPage();
-                    break;
-                case Key.Escape:
-                    CloseThis();
-                    break;
-            }
-            if (flow.Index != Convert.ToInt32(slider.Value))
-                slider.Value = flow.Index;
-        }
+        private volatile DetialWindow _detialWindow;
+        private volatile MusicWindow _musicWindow;
+        private volatile VideoWindow _videoWindow;
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
-        {
-            DoKeyDown(e.Key);
-        }
-
-        private void slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            flow.Index = Convert.ToInt32(slider.Value);
-        }
-
-        #endregion
-
-        #region Private stuff
-
-        private LeapMotinn leapMotinn;
-
-        private List<FileInfo> images;
-        private int currentIndex = 0;
-
-        private DirectoryInfo myMusicDir, myCoverDir, myLyricDir, myVideoDir;
-
-        #endregion
+        private Storyboard _stdStart, _stdEnd;
 
         /// <summary>
-        /// 加载图片
+        /// Time until skeleton ceases to be highlighted.
         /// </summary>
-        public void LoadImages()
+        private DateTime _highlightTime = DateTime.MinValue;
+
+        /// <summary>
+        /// The ID of the skeleton to highlight.
+        /// </summary>
+        private int _highlightId = -1;
+
+        #endregion
+
+        #region 载入与初始化
+
+        public MainWindow()
         {
-            images = new List<FileInfo>();
+            InitializeComponent();
 
-            var commonPicturesDir =
-                new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures));
-            images.AddRange(commonPicturesDir.GetFiles("*.jpg"));
-            images.AddRange(commonPicturesDir.GetFiles("*.png"));
-
-
-            var myPicturesDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
-            images.AddRange(myPicturesDir.GetFiles("*.jpg"));
-            images.AddRange(myPicturesDir.GetFiles("*.png"));
-
-            myMusicDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic));
-            myCoverDir = new DirectoryInfo(myMusicDir.FullName + @"\Covers\");
-            if (!myCoverDir.Exists)
+            try
             {
-                myCoverDir.Create();
+                _kinectHelper = new KinectHelper();
             }
-            myLyricDir = new DirectoryInfo(myMusicDir.FullName + @"\Lyrics\");
-            if (!myLyricDir.Exists)
+            catch
             {
-                myLyricDir.Create();
+                MessageBox.Show("Kinect启动失败，请检查连接或驱动");
             }
-            FileInfo[] musics = myMusicDir.GetFiles("*.mp3");
-
-            foreach (var music in musics)
+            try
             {
-                string cover = myCoverDir + @"\" + System.IO.Path.GetFileNameWithoutExtension(music.FullName) + ".jpg";
-                if (!File.Exists(cover))
+                _leapHelper = new LeapHelper();
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("LeapMotion启动失败，请检查连接或驱动");
+            }
+
+            Width = SystemParameters.PrimaryScreenWidth;
+            Height = SystemParameters.PrimaryScreenHeight;
+            Top = 0;
+            Left = 0;
+
+            flow.Width = Width;
+            flow.Height = Height;
+            flow.IndexChanged += flow_IndexChanged;
+            flow.CenterCoverClicked += flow_CenterCoverClicked;
+
+            flow.Cache = new ThumbnailManager();
+            LoadFiles();
+
+            slider.Minimum = 0;
+            slider.Maximum = flow.Count - 1;
+
+            Loaded += Window_Loaded;
+        }
+
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            List<GestureType> gestureses = new List<GestureType>
                 {
-                    TagHandler _tagHandler = new TagHandler(new Mp3File(music).TagModel);
-                    if (_tagHandler.Picture != null)
-                    {
-                        _tagHandler.Picture.Save(cover);
-                    }
-                        //ID3Info info = new ID3Info(music.FullName, true);//从ID3V2信息中读取封面
-                        //info.Load();
-                        //if (info.ID3v2Info.HaveTag && info.ID3v2Info.AttachedPictureFrames.Items.Length > 0)
-                        //{
-                        //    MemoryStream ms = info.ID3v2Info.AttachedPictureFrames.Items[0].Data;
-                        //    System.Drawing.Image img = Bitmap.FromStream(ms);
-                        //    img.Save(cover, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    GestureType.JoinedHands,
+                    GestureType.LeftHandHalfLift,
+                    GestureType.Pull,
+                    GestureType.Push,
+                    GestureType.SwipLeft,
+                    GestureType.SwipRight,
+                    GestureType.ZoomIn,
+                    GestureType.ZoomOut
+                };
+            _kinectHelper.RegisterGestures(gestureses);
+            _kinectHelper.SkeletonReady += kinectHelper_SkeletonReady;
+            _kinectHelper.GestureDetected += kinectHelper_GestureDetected;
 
-                        //}
+            if (_leapHelper.IsConnected)
+            {
+                _leapHelper.Listener.LeapSwipeReady += ListenerLeapSwipeReady;
+                _leapHelper.Listener.LeapFingerReady += Listener_LeapFingerReady;
+                _leapHelper.Listener.LeapTapScreenReady += ListenerLeapTapScreenReady;
+                _leapHelper.Listener.LeapCircleReady += Listener_LeapCircleReady;
+            }
+
+
+            _stdStart = (Storyboard) Resources["sb_start"];
+            _stdStart.Begin();
+
+            InitBassEngine(); //初始化播放器
+            ChangeFileInfo(); //显示文件信息           
+        }
+
+        /// <summary>
+        /// 初始化音乐播放器
+        /// </summary>
+        private void InitBassEngine()
+        {
+            //歌曲播放完毕
+            //SpectrumAnalyzer.RegisterSoundPlayer(BassEngine.Instance);
+            BassEngine.ExplicitInitialize();
+            BassEngine.Instance.TrackEnded += delegate
+                {
+                    if (_musicWindow != null)
+                    {
+                        _musicWindow.CloseThis();
+                        _musicWindow = null;
+                    }
+                };
+            //音乐加载成功
+            BassEngine.Instance.OpenSucceeded += delegate
+                {
+                    Debug.WriteLine(" 音乐加载成功");
+                    BassEngine.Instance.Volume = 1;
+                    BassEngine.Instance.Play();
+                };
+            //打开音乐失败
+            BassEngine.Instance.OpenFailed += delegate
+                {
+                    if (_musicWindow != null)
+                    {
+                        _musicWindow.CloseThis();
+                        _musicWindow = null;
+                    }
+                };
+
+            //绑定音量设置
+        }
+
+        #endregion
+
+        #region Kinect相关处理
+
+        #region 事件处理
+
+        private void kinectHelper_GestureDetected(object sender, GestureType gestureType)
+        {
+            switch (gestureType)
+            {
+                case GestureType.LeftHandHalfLift:
+                    if (_detialWindow == null && _musicWindow == null && _videoWindow == null)
+                    {
+                        HighLightStickMan();
+                        CloseThis();
+                    }
+                    break;
+                case GestureType.JoinedHands:
+                    if (_detialWindow == null)
+                    {
+                        if (_musicWindow != null)
+                        {
+                            HighLightStickMan();
+                            _musicWindow.ChangeStatue();
+                        }
+                        else
+                        {
+                            HighLightStickMan();
+                            _videoWindow.ChangeStatue();
+                        }
+                    }
+                    break;
+                case GestureType.ZoomIn:
+                    //Gesture = "Zoom In";
+                    if (_detialWindow == null && _musicWindow == null && _videoWindow == null)
+                    {
+                        HighLightStickMan();
+                        Close();
+                    }
+                    break;
+                case GestureType.ZoomOut:
+                    //Gesture = "Zoom Out";              
+                    break;
+                case GestureType.Pull:
+                    if (_detialWindow == null && _musicWindow == null && _videoWindow == null)
+                    {
+                        HighLightStickMan();
+                        OpenSubWindow();
+                    }
+                    break;
+                case GestureType.Push:
+                    if (_detialWindow != null || _musicWindow != null || _videoWindow != null)
+                    {
+                        HighLightStickMan();
+                        if (_detialWindow != null)
+                        {
+                            _detialWindow.CloseThis();
+                            _detialWindow = null;
+                        }
+                        else if (_musicWindow != null)
+                        {
+                            _musicWindow.CloseThis();
+                            _musicWindow = null;
+                        }
+                        else
+                        {
+                            _videoWindow.CloseThis();
+                            _videoWindow = null;
+                        }
+                    }
+                    break;
+                case GestureType.SwipLeft:
+                    HighLightStickMan();
+                    if (_musicWindow != null)
+                    {
+                        _musicWindow.Forword();
+                    }
+                    else if (_videoWindow != null)
+                    {
+                        _videoWindow.Forword();
+                    }
+                    else if (_detialWindow != null)
+                    {
+                        _detialWindow.Forword();
+                    }
                     else
                     {
-                        File.Copy(System.Environment.CurrentDirectory + @"\cover.jpg", cover, true);
+                        flow.GoToPrevious();
                     }
-                }
-                images.Add(new FileInfo(cover));
-            }
-
-            myVideoDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos));
-            DirectoryInfo thumbnailDir = new DirectoryInfo(myVideoDir.FullName + @"\thumbnais");
-            if (!thumbnailDir.Exists)
-            {
-                thumbnailDir = myVideoDir.CreateSubdirectory("thumbnails");
-            }
-            FileInfo[] videos = myVideoDir.GetFiles("*.mp4");
-            foreach (var video in videos)
-            {
-                string thumbnail = thumbnailDir + @"\" + System.IO.Path.GetFileNameWithoutExtension(video.FullName) +
-                                   ".jpg";
-
-                if (!File.Exists(thumbnail))
-                {
-                    if (VideoUnity.CatchImg(video.FullName, thumbnail))
+                    break;
+                case GestureType.SwipRight:
+                    HighLightStickMan();
+                    if (_musicWindow != null)
                     {
-                        images.Add(new FileInfo(thumbnail));
+                        _musicWindow.Backword();
                     }
-                    //images.Add(new FileInfo(thumbnail));
-                }
-                else
-                {
-                    images.Add(new FileInfo(thumbnail));
-                }
+                    else if (_videoWindow != null)
+                    {
+                        _videoWindow.Backword();
+                    }
+                    else if (_detialWindow != null)
+                    {
+                        _detialWindow.Backword();
+                    }
+                    else
+                    {
+                        flow.GoToNext();
+                    }
+                    break;
             }
-
-
-            images.Sort(new FileInfoComparer());
-            foreach (FileInfo f in images)
-                flow.Add(Environment.MachineName, f.FullName);
         }
 
-        #region Kinect 相关变量
-
-        private volatile DetialWindow detialWindow;
-        private volatile MusicWindow musicWindow;
-        private volatile VideoWindow videoWindow;
+        private void kinectHelper_SkeletonReady(object sender, Skeleton skeleton)
+        {
+            if (CheckIfShowHand(skeleton))
+            {
+                _detialWindow.SetHandLeftPoint(CalcScreenPoint(skeleton, JointType.HandLeft));
+                _detialWindow.SetHandRightPoint(CalcScreenPoint(skeleton, JointType.HandRight));
+            }
+            DrawStickMan();
+        }
 
         /// <summary>
-        /// The recognizer being used.
+        /// 检查是否追踪双手
         /// </summary>
-        private readonly Recognizer activeRecognizer;
+        /// <param name="skeleton"></param>
+        /// <returns></returns>
+        private bool CheckIfShowHand(Skeleton skeleton)
+        {
+            if (skeleton.Joints[JointType.HandLeft].Position.Y > skeleton.Joints[JointType.HipLeft].Position.Y &&
+                skeleton.Joints[JointType.HandRight].Position.Y > skeleton.Joints[JointType.HipRight].Position.Y &&
+                skeleton.Joints[JointType.HandLeft].Position.Z < skeleton.Joints[JointType.ShoulderLeft].Position.Z &&
+                skeleton.Joints[JointType.HandRight].Position.Z < skeleton.Joints[JointType.ShoulderRight].Position.Z
+                )
+            {
+                HighLightStickMan();
+                return true;
+            }
+            _detialWindow.timerTrans.Stop();
+            return false;
+        }
 
+        /// <summary>
+        /// 将Kinect的坐标映射到屏幕
+        /// </summary>
+        /// <param name="skeleton"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private static Point CalcScreenPoint(Skeleton skeleton, JointType type)
+        {
+            double adj = type == JointType.HandLeft ? 0.28 : 0.12;
+            Joint jointHand = skeleton.Joints[type];
+            Joint jointShoulderCenter = skeleton.Joints[JointType.ShoulderCenter];
+            float x = jointHand.Position.X - jointShoulderCenter.Position.X; //hX - sX;
+            float y = jointShoulderCenter.Position.Y - jointHand.Position.Y; //sY - hY;
+            return
+                new Point(
+                    (int) ((x + adj)/0.35*SystemParameters.PrimaryScreenWidth - SystemParameters.PrimaryScreenWidth/2),
+                    (int) (y/0.35*SystemParameters.PrimaryScreenHeight) - SystemParameters.PrimaryScreenHeight/2);
+        }
 
-        //private readonly MotionHelper motionHelper;
+        #endregion
 
+        #region 绘制动作小人与高亮
 
         /// <summary>
         /// Array of arrays of contiguous line segements that represent a skeleton.
         /// </summary>
-        private static readonly JointType[][] SkeletonSegmentRuns = new JointType[][]
+        private static readonly JointType[][] SkeletonSegmentRuns = new[]
             {
-                new JointType[]
+                new[]
                     {
                         JointType.Head, JointType.ShoulderCenter, JointType.HipCenter
                     },
-                new JointType[]
+                new[]
                     {
                         JointType.HandLeft, JointType.WristLeft, JointType.ElbowLeft, JointType.ShoulderLeft,
                         JointType.ShoulderCenter,
                         JointType.ShoulderRight, JointType.ElbowRight, JointType.WristRight, JointType.HandRight
                     },
-                new JointType[]
+                new[]
                     {
                         JointType.FootLeft, JointType.AnkleLeft, JointType.KneeLeft, JointType.HipLeft,
                         JointType.HipCenter,
@@ -218,194 +355,180 @@ namespace KinectExplorer
             };
 
         /// <summary>
-        /// The sensor we're currently tracking.
+        /// Draw stick men for all the tracked Skeletons.
         /// </summary>
-        private KinectSensor nui;
+        private void DrawStickMan()
+        {
+            StickMen.Children.Clear();
+            foreach (var skeleton in _kinectHelper.Skeletons)
+            {
+                // Only draw tracked skeletons.
+                if (skeleton.TrackingState == SkeletonTrackingState.Tracked)
+                {
+                    // Draw a background for the next pass.
+                    DrawSkeleton(skeleton, Brushes.WhiteSmoke, 7);
+                }
+            }
+
+            foreach (var skeleton in _kinectHelper.Skeletons)
+            {
+                // Only draw tracked skeletons.
+                if (skeleton.TrackingState == SkeletonTrackingState.Tracked)
+                {
+                    // Pick a brush, Red for a skeleton that has recently gestures, black for the nearest, gray otherwise.
+                    var brush = DateTime.UtcNow < _highlightTime && skeleton.TrackingId == _highlightId
+                                    ? Brushes.Red
+                                    : skeleton.TrackingId == _kinectHelper.NearestId ? Brushes.Black : Brushes.Gray;
+
+                    // Draw the individual skeleton.
+                    DrawSkeleton(skeleton, brush, 3);
+                }
+            }
+        }
 
         /// <summary>
-        /// There is currently no connected sensor.
+        /// Draw an individual skeleton.
         /// </summary>
-        private bool isDisconnectedField = true;
+        /// <param name="skeleton">The skeleton to draw.</param>
+        /// <param name="brush">The brush to use.</param>
+        /// <param name="thickness">This thickness of the stroke.</param>
+        private void DrawSkeleton(Skeleton skeleton, Brush brush, int thickness)
+        {
+            Debug.Assert(skeleton.TrackingState == SkeletonTrackingState.Tracked, "The skeleton is being tracked.");
+
+            foreach (var run in SkeletonSegmentRuns)
+            {
+                var next = GetJointPoint(skeleton, run[0]);
+                for (var i = 1; i < run.Length; i++)
+                {
+                    var prev = next;
+                    next = GetJointPoint(skeleton, run[i]);
+
+                    var line = new Line
+                        {
+                            Stroke = brush,
+                            StrokeThickness = thickness,
+                            X1 = prev.X,
+                            Y1 = prev.Y,
+                            X2 = next.X,
+                            Y2 = next.Y,
+                            StrokeEndLineCap = PenLineCap.Round,
+                            StrokeStartLineCap = PenLineCap.Round
+                        };
+
+                    StickMen.Children.Add(line);
+                }
+            }
+        }
 
         /// <summary>
-        /// Any message associated with a failure to connect.
+        /// Convert skeleton joint to a point on the StickMen canvas.
         /// </summary>
-        private string disconnectedReasonField;
+        /// <param name="skeleton">The skeleton.</param>
+        /// <param name="jointType">The joint to project.</param>
+        /// <returns>The projected point.</returns>
+        private Point GetJointPoint(Skeleton skeleton, JointType jointType)
+        {
+            var joint = skeleton.Joints[jointType];
+            var point = new Point
+                {
+                    X = (StickMen.Width/2) + (StickMen.Height*joint.Position.X/3),
+                    Y = (StickMen.Width/2) - (StickMen.Height*joint.Position.Y/3)
+                };
+
+            return point;
+        }
 
         /// <summary>
-        /// Array to receive skeletons from sensor, resize when needed.
+        /// Height TheSeickMan
         /// </summary>
-        private Skeleton[] skeletons = new Skeleton[0];
-
-        /// <summary>
-        /// Time until skeleton ceases to be highlighted.
-        /// </summary>
-        private DateTime highlightTime = DateTime.MinValue;
-
-        /// <summary>
-        /// The ID of the skeleton to highlight.
-        /// </summary>
-        private int highlightId = -1;
-
-        /// <summary>
-        /// The ID if the skeleton to be tracked.
-        /// </summary>
-        private int nearestId = -1;
-
-
-        private CoordinateMapper mapper;
-        private Storyboard stdStart, stdEnd;
-        private GestureController gestureController;
+        private void HighLightStickMan()
+        {
+            if (!_kinectHelper.IsDisconnected)
+            {
+                foreach (Skeleton t in _kinectHelper.Skeletons)
+                {
+                    if (t.TrackingId == _kinectHelper.NearestId)
+                    {
+                        _highlightTime = DateTime.UtcNow + TimeSpan.FromSeconds(0.5);
+                        // Record the ID of the skeleton.
+                        _highlightId = t.TrackingId;
+                    }
+                }
+            }
+        }
 
         #endregion
 
-        public MainWindow()
-        {
-            InitializeComponent();
-            this.Width = SystemParameters.PrimaryScreenWidth;
-            this.Height = SystemParameters.PrimaryScreenHeight;
-            this.Top = 0;
-            this.Left = 0;
+        #endregion
 
-            flow.Width = this.Width;
-            flow.Height = this.Height;
-            flow.IndexChanged += flow_IndexChanged;
-            flow.CenterCoverClicked += flow_CenterCoverClicked;
-
-            flow.Cache = new ThumbnailManager();
-            LoadImages();
-
-            slider.Minimum = 0;
-            slider.Maximum = flow.Count - 1;
-
-
-            // Create the gesture recognizer.
-            this.activeRecognizer = this.CreateRecognizer();
-            // Wire-up window loaded event.
-            Loaded += this.Window_Loaded;
-
-            //var opacityGrid = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0)));
-            //var widthx = new DoubleAnimation(10, SystemParameters.PrimaryScreenWidth / 2, new Duration(TimeSpan.FromMilliseconds(500)));
-            //var heightx = new DoubleAnimation(10, SystemParameters.PrimaryScreenHeight / 2, new Duration(TimeSpan.FromMilliseconds(500)));
-
-            ////this.BeginAnimation(MainWindow.OpacityProperty, opacityGrid);
-            //this.BeginAnimation(MainWindow.WidthProperty, widthx);
-            //this.BeginAnimation(MainWindow.HeightProperty, heightx);
-        }
-
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            stdStart = (Storyboard) this.Resources["sb_start"];
-            stdStart.Begin();
-
-            InitBassEngine(); //初始化播放器
-
-            ChangeFileInfo(); //显示文件信息
-
-            leapMotinn = new LeapMotinn();
-            if (leapMotinn.IsConnected)
-            {
-                leapMotinn.Listener.LeapSwipeReady += ListenerLeapSwipeReady;
-                leapMotinn.Listener.LeapFingerReady += Listener_LeapFingerReady;
-                leapMotinn.Listener.LeapTapScreenReady += ListenerLeapTapScreenReady;
-                leapMotinn.Listener.LeapCircleReady += Listener_LeapCircleReady;
-            }
-            else
-            {
-                //leapMotinn
-            }
-
-            // Start the Kinect system, this will cause StatusChanged events to be queued.
-            this.InitializeNui();
-
-            // Handle StatusChange events to pick the first sensor that connects.
-            KinectSensor.KinectSensors.StatusChanged += (s, ee) =>
-                {
-                    switch (ee.Status)
-                    {
-                        case KinectStatus.Connected:
-                            if (nui == null)
-                            {
-                                InitializeNui();
-                            }
-                            break;
-                        default:
-                            if (ee.Sensor == nui)
-                            {
-                                UninitializeNui();
-                            }
-                            break;
-                    }
-                };
-        }
+        #region LeapMotion相关事件
 
         private void Listener_LeapCircleReady(object sender)
         {
-            if (musicWindow != null)
+            if (_musicWindow != null)
             {
-                Action action = () => musicWindow.ChangeStatue();
+                Action action = () => _musicWindow.ChangeStatue();
                 Dispatcher.BeginInvoke(DispatcherPriority.Send, action);
             }
-            else if (videoWindow != null)
+            else if (_videoWindow != null)
             {
-                Action action = () => videoWindow.ChangeStatue();
+                Action action = () => _videoWindow.ChangeStatue();
                 Dispatcher.BeginInvoke(DispatcherPriority.Send, action);
             }
         }
 
         private void ListenerLeapTapScreenReady(object sender)
         {
-            if (detialWindow != null || musicWindow != null || videoWindow != null)
+            if (_detialWindow != null || _musicWindow != null || _videoWindow != null)
             {
-                Action action2 = null;
-                if (detialWindow != null)
+                Action action2;
+                if (_detialWindow != null)
                 {
-                    action2 = () => detialWindow.CloseThis();
+                    action2 = () => _detialWindow.CloseThis();
                 }
-                else if (musicWindow != null)
+                else if (_musicWindow != null)
                 {
-                    action2 = () => musicWindow.CloseThis();
+                    action2 = () => _musicWindow.CloseThis();
                 }
                 else
                 {
-                    action2 = () => videoWindow.CloseThis();
+                    action2 = () => _videoWindow.CloseThis();
                 }
                 Dispatcher.BeginInvoke(DispatcherPriority.Send, action2).Completed += (a, b) =>
                     {
-                        detialWindow = null;
-                        musicWindow = null;
-                        videoWindow = null;
+                        _detialWindow = null;
+                        _musicWindow = null;
+                        _videoWindow = null;
                     };
             }
             else
             {
-                Action action = () => OpenSubWindow();
+                Action action = OpenSubWindow;
                 Dispatcher.BeginInvoke(DispatcherPriority.Send, action);
             }
         }
 
-        private void Listener_LeapFingerReady(object sender, Leap.Finger first, Leap.Finger second)
+        private void Listener_LeapFingerReady(object sender, Finger first, Finger second)
         {
-            if (detialWindow != null)
+            if (_detialWindow != null)
             {
-                Point3D left, right;
                 Action action1, action2;
-                left = new Point3D(first.TipPosition.x*3.5,
-                                   -3.5*(first.TipPosition.y - 100) + SystemParameters.PrimaryScreenHeight/2,
-                                   first.TipPosition.z);
-                right = new Point3D(second.TipPosition.x*3.5,
-                                    -3.5*(second.TipPosition.y - 100) + SystemParameters.PrimaryScreenHeight/2,
-                                    second.TipPosition.z);
+                Point3D left = new Point3D(first.TipPosition.x*3.5,
+                                           -3.5*(first.TipPosition.y - 100) + SystemParameters.PrimaryScreenHeight/2,
+                                           first.TipPosition.z);
+                Point3D right = new Point3D(second.TipPosition.x*3.5,
+                                            -3.5*(second.TipPosition.y - 100) + SystemParameters.PrimaryScreenHeight/2,
+                                            second.TipPosition.z);
                 if (first.TipPosition.x <= second.TipPosition.x)
                 {
-                    action1 = () => detialWindow.SetHandLeftPoint3D(left);
-                    action2 = () => detialWindow.SetHandRightPoint3D(right);
+                    action1 = () => _detialWindow.SetHandLeftPoint3D(left);
+                    action2 = () => _detialWindow.SetHandRightPoint3D(right);
                 }
                 else
                 {
-                    action1 = () => detialWindow.SetHandLeftPoint3D(right);
-                    action2 = () => detialWindow.SetHandRightPoint3D(left);
+                    action1 = () => _detialWindow.SetHandLeftPoint3D(right);
+                    action2 = () => _detialWindow.SetHandRightPoint3D(left);
                 }
                 Dispatcher.BeginInvoke(DispatcherPriority.Send, action1);
                 Dispatcher.BeginInvoke(DispatcherPriority.Send, action2);
@@ -418,17 +541,17 @@ namespace KinectExplorer
             switch (type)
             {
                 case SwipeType.SwipeLeft:
-                    if (musicWindow != null)
+                    if (_musicWindow != null)
                     {
-                        action = () => musicWindow.Backword();
+                        action = () => _musicWindow.Backword();
                     }
-                    else if (videoWindow != null)
+                    else if (_videoWindow != null)
                     {
-                        action = () => videoWindow.Backword();
+                        action = () => _videoWindow.Backword();
                     }
-                    else if (detialWindow != null)
+                    else if (_detialWindow != null)
                     {
-                        action = () => detialWindow.Backword();
+                        action = () => _detialWindow.Backword();
                     }
                     else
                     {
@@ -437,17 +560,17 @@ namespace KinectExplorer
 
                     break;
                 case SwipeType.SwipeRight:
-                    if (musicWindow != null)
+                    if (_musicWindow != null)
                     {
-                        action = () => musicWindow.Forword();
+                        action = () => _musicWindow.Forword();
                     }
-                    else if (videoWindow != null)
+                    else if (_videoWindow != null)
                     {
-                        action = () => videoWindow.Forword();
+                        action = () => _videoWindow.Forword();
                     }
-                    else if (detialWindow != null)
+                    else if (_detialWindow != null)
                     {
-                        action = () => detialWindow.Forword();
+                        action = () => _detialWindow.Forword();
                     }
                     else
                     {
@@ -490,6 +613,41 @@ namespace KinectExplorer
                 Dispatcher.BeginInvoke(DispatcherPriority.Normal, action);
         }
 
+        #endregion
+
+        #region 打开下一级展示窗口(Kinect与LeapMotion部分共同调用)
+
+        /// <summary>
+        /// 打开图片展示/音乐播放/视频播放窗口
+        /// </summary>
+        private void OpenSubWindow()
+        {
+            FileInfo info = CheckIfMediaPath(_currentIndex);
+            if (info != null)
+            {
+                if (info.Extension == ".mp3")
+                {
+                    BassEngine.Instance.OpenFile(info.FullName);
+                    _musicWindow = MusicWindow.GetInstance(_images[_currentIndex]);
+                    _musicWindow.Show();
+                }
+                else
+                {
+                    _videoWindow = VideoWindow.GetInstance(_images[_currentIndex], info);
+                    //new VideoWindow(images[currentIndex],info);
+                    _videoWindow.Show();
+                }
+            }
+            else
+            {
+                _detialWindow = DetialWindow.GetInstance(_images[_currentIndex]);
+                _detialWindow.Show();
+            }
+        }
+
+        #endregion
+
+        #region 界面事件
 
         /// <summary>
         /// 中间的Cover被点击
@@ -500,49 +658,164 @@ namespace KinectExplorer
             OpenSubWindow();
         }
 
+        /// <summary>
+        /// 中间的Cover发生变化
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void flow_IndexChanged(object sender, int e)
+        {
+            _currentIndex = e;
+            ChangeFileInfo();
+        }
 
         /// <summary>
-        /// 打开图片展示或者音乐播放窗口
+        /// 滑动条进度发生变化
         /// </summary>
-        private void OpenSubWindow()
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            FileInfo info = CheckIfMediaPath(currentIndex);
-            if (info != null)
+            flow.Index = Convert.ToInt32(slider.Value);
+        }
+
+        /// <summary>
+        /// 键盘操作
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.Key)
             {
-                if (info.Extension == ".mp3")
+                case Key.Right:
+                    flow.GoToNext();
+                    break;
+                case Key.Left:
+                    flow.GoToPrevious();
+                    break;
+                case Key.PageUp:
+                    flow.GoToNextPage();
+                    break;
+                case Key.PageDown:
+                    flow.GoToPreviousPage();
+                    break;
+                case Key.Escape:
+                    CloseThis();
+                    break;
+            }
+            if (flow.Index != Convert.ToInt32(slider.Value))
+                slider.Value = flow.Index;
+        }
+
+        #endregion
+
+        #region 文件相关处理
+
+        /// <summary>
+        /// 加载文件
+        /// </summary>
+        public void LoadFiles()
+        {
+            _images = new List<FileInfo>();
+
+            var commonPicturesDir =
+                new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures));
+            _images.AddRange(commonPicturesDir.GetFiles("*.jpg"));
+            _images.AddRange(commonPicturesDir.GetFiles("*.png"));
+
+            var myPicturesDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
+            _images.AddRange(myPicturesDir.GetFiles("*.jpg"));
+            _images.AddRange(myPicturesDir.GetFiles("*.png"));
+
+
+            _myMusicDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic));
+            _myCoverDir = new DirectoryInfo(_myMusicDir.FullName + @"\Covers\");
+            if (!_myCoverDir.Exists)
+            {
+                _myCoverDir.Create();
+            }
+            _myLyricDir = new DirectoryInfo(_myMusicDir.FullName + @"\Lyrics\");
+            if (!_myLyricDir.Exists)
+            {
+                _myLyricDir.Create();
+            }
+            FileInfo[] musics = _myMusicDir.GetFiles("*.mp3");
+
+            foreach (var music in musics)
+            {
+                string cover = _myCoverDir + @"\" + Path.GetFileNameWithoutExtension(music.FullName) + ".jpg";
+                if (!File.Exists(cover))
                 {
-                    BassEngine.Instance.OpenFile(info.FullName);
-                    musicWindow = MusicWindow.GetInstance(images[currentIndex]);
-                    musicWindow.Show();
+                    TagHandler tagHandler = new TagHandler(new Mp3File(music).TagModel);
+                    if (tagHandler.Picture != null)
+                    {
+                        tagHandler.Picture.Save(cover);
+                    }
+                    else
+                    {
+                        File.Copy(Environment.CurrentDirectory + @"\cover.jpg", cover, true);
+                    }
+                }
+                _images.Add(new FileInfo(cover));
+            }
+
+
+            _myVideoDir = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos));
+            DirectoryInfo thumbnailDir = new DirectoryInfo(_myVideoDir.FullName + @"\thumbnais");
+            if (!thumbnailDir.Exists)
+            {
+                thumbnailDir = _myVideoDir.CreateSubdirectory("thumbnails");
+            }
+            FileInfo[] videos = _myVideoDir.GetFiles("*.mp4");
+            foreach (var video in videos)
+            {
+                string thumbnail = thumbnailDir + @"\" + Path.GetFileNameWithoutExtension(video.FullName) +
+                                   ".jpg";
+
+                if (!File.Exists(thumbnail))
+                {
+                    if (VideoUnity.CatchImg(video.FullName, thumbnail))
+                    {
+                        _images.Add(new FileInfo(thumbnail));
+                    }
+                    //images.Add(new FileInfo(thumbnail));
                 }
                 else
                 {
-                    videoWindow = VideoWindow.GetInstance(images[currentIndex], info);
-                        //new VideoWindow(images[currentIndex],info);
-                    videoWindow.Show();
+                    _images.Add(new FileInfo(thumbnail));
                 }
             }
-            else
+
+            _images.Sort(new FileInfoComparer());
+            foreach (FileInfo f in _images)
+                flow.Add(Environment.MachineName, f.FullName);
+        }
+
+        /// <summary>
+        /// 文件名比较
+        /// </summary>
+        private class FileInfoComparer : IComparer<FileInfo>
+        {
+            public int Compare(FileInfo x, FileInfo y)
             {
-                detialWindow = DetialWindow.GetInstance(images[currentIndex]);
-                detialWindow.Show();
+                return String.CompareOrdinal(x.FullName, y.FullName);
             }
         }
 
-
         /// <summary>
-        /// 检查点击的Cover是否是音乐或视频文件
+        /// 检查Cover是否是音乐或视频文件
         /// </summary>
         /// <param name="currentIndex"></param>
         /// <returns></returns>
         private FileInfo CheckIfMediaPath(int currentIndex)
         {
-            string musicPath = myMusicDir.FullName + @"\" +
-                               System.IO.Path.GetFileNameWithoutExtension(images[currentIndex].FullName) + ".mp3";
+            string musicPath = _myMusicDir.FullName + @"\" +
+                               Path.GetFileNameWithoutExtension(_images[currentIndex].FullName) + ".mp3";
             if (File.Exists(musicPath))
                 return new FileInfo(musicPath);
-            string videoPath = myVideoDir.FullName + @"\" +
-                               System.IO.Path.GetFileNameWithoutExtension(images[currentIndex].FullName) + ".mp4";
+            string videoPath = _myVideoDir.FullName + @"\" +
+                               Path.GetFileNameWithoutExtension(_images[currentIndex].FullName) + ".mp4";
             if (File.Exists(videoPath))
             {
                 return new FileInfo(videoPath);
@@ -552,28 +825,17 @@ namespace KinectExplorer
 
 
         /// <summary>
-        /// 中间的Cover发生变化
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void flow_IndexChanged(object sender, int e)
-        {
-            currentIndex = e;
-            ChangeFileInfo();
-        }
-
-        /// <summary>
         /// 显示文件信息
         /// </summary>
         private void ChangeFileInfo()
         {
-            FileInfo info = CheckIfMediaPath(currentIndex);
-            string strName = info != null ? info.Name : images[currentIndex].Name;
-            fileInfo.Text = System.IO.Path.GetFileNameWithoutExtension(strName);
+            FileInfo info = CheckIfMediaPath(_currentIndex);
+            string strName = info != null ? info.Name : _images[_currentIndex].Name;
+            fileInfo.Text = Path.GetFileNameWithoutExtension(strName);
             if (flow.Index != Convert.ToInt32(slider.Value))
                 slider.Value = flow.Index;
             if (info == null)
-                info = new FileInfo(images[currentIndex].Name);
+                info = new FileInfo(_images[_currentIndex].Name);
             string picName;
             switch (info.Extension)
             {
@@ -597,596 +859,24 @@ namespace KinectExplorer
                 ImgMedia.Source = new BitmapImage(new Uri(Environment.CurrentDirectory + @"\" + picName));
         }
 
+        #endregion
+
+        #region 退出和释放资源
 
         /// <summary>
-        /// Event implementing INotifyPropertyChanged interface.
+        /// 关闭窗口
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public bool IsDisconnected
-        {
-            get { return this.isDisconnectedField; }
-            private set
-            {
-                if (this.isDisconnectedField != value)
-                {
-                    this.isDisconnectedField = value;
-
-                    if (this.PropertyChanged != null)
-                    {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("IsDisconnected"));
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets any message associated with a failure to connect.
-        /// </summary>
-        public string DisconnectedReason
-        {
-            get { return this.disconnectedReasonField; }
-
-            private set
-            {
-                if (this.disconnectedReasonField != value)
-                {
-                    this.disconnectedReasonField = value;
-
-                    if (this.PropertyChanged != null)
-                    {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("DisconnectedReason"));
-                    }
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// Create a wired-up recognizer for running the slideshow.
-        /// </summary>
-        /// <returns>The wired-up recognizer.</returns>
-        private Recognizer CreateRecognizer()
-        {
-            // Instantiate a recognizer.
-            var recognizer = new Recognizer();
-
-            // Wire-up swipe right to manually advance picture.
-            recognizer.SwipeRightDetected += (s, e) =>
-                {
-                    if (e.Skeleton.TrackingId == nearestId)
-                    {
-                        HighlightSkeleton(e.Skeleton);
-                        if (musicWindow != null)
-                        {
-                            musicWindow.Backword();
-                        }
-                        else if (videoWindow != null)
-                        {
-                            videoWindow.Backword();
-                        }
-                        else if (detialWindow != null)
-                        {
-                            detialWindow.Backword();
-                        }
-                        else
-                        {
-                            flow.GoToNext();
-                        }
-                    }
-                };
-
-            // Wire-up swipe left to manually reverse picture.
-            recognizer.SwipeLeftDetected += (s, e) =>
-                {
-                    if (e.Skeleton.TrackingId == nearestId)
-                    {
-                        HighlightSkeleton(e.Skeleton);
-                        if (musicWindow != null)
-                        {
-                            musicWindow.Forword();
-                        }
-                        else if (videoWindow != null)
-                        {
-                            videoWindow.Forword();
-                        }
-                        else if (detialWindow != null)
-                        {
-                            detialWindow.Forword();
-                        }
-                        else
-                        {
-                            flow.GoToPrevious();
-                        }
-                    }
-                };
-            return recognizer;
-        }
-
-        /// <summary>
-        /// Handle insertion of Kinect sensor.
-        /// </summary>
-        private void InitializeNui()
-        {
-            this.UninitializeNui();
-
-            var index = 0;
-            while (this.nui == null && index < KinectSensor.KinectSensors.Count)
-            {
-                try
-                {
-                    this.nui = KinectSensor.KinectSensors[index];
-
-                    // initialize the gesture recognizer
-                    gestureController = new GestureController();
-                    gestureController.GestureRecognized += OnGestureRecognized;
-
-                    // register the gestures for this demo
-                    RegisterGestures();
-
-                    this.nui.Start();
-                    mapper = new CoordinateMapper(nui);
-
-                    this.IsDisconnected = false;
-                    this.DisconnectedReason = null;
-                }
-                catch (IOException ex)
-                {
-                    this.nui = null;
-
-                    this.DisconnectedReason = ex.Message;
-                }
-                catch (InvalidOperationException ex)
-                {
-                    this.nui = null;
-
-                    this.DisconnectedReason = ex.Message;
-                }
-
-                index++;
-            }
-
-            if (this.nui != null)
-            {
-                this.nui.SkeletonStream.Enable();
-
-                this.nui.SkeletonFrameReady += this.OnSkeletonFrameReady;
-            }
-        }
-
-        /// <summary>
-        /// Handle removal of Kinect sensor.
-        /// </summary>
-        private void UninitializeNui()
-        {
-            if (this.nui != null)
-            {
-                this.nui.SkeletonFrameReady -= this.OnSkeletonFrameReady;
-
-                this.nui.Stop();
-
-                this.nui = null;
-            }
-            this.IsDisconnected = true;
-            this.DisconnectedReason = null;
-        }
-
-
-        /// <summary>
-        /// 初始化播放器
-        /// </summary>
-        private void InitBassEngine()
-        {
-            //歌曲播放完毕
-            //SpectrumAnalyzer.RegisterSoundPlayer(BassEngine.Instance);
-            BassEngine.ExplicitInitialize(null);
-            BassEngine.Instance.TrackEnded += delegate
-                {
-                    if (musicWindow != null)
-                    {
-                        musicWindow.CloseThis();
-                        musicWindow = null;
-                    }
-                };
-            //音乐加载成功
-            BassEngine.Instance.OpenSucceeded += delegate
-                {
-                    Debug.WriteLine(" 音乐加载成功");
-                    BassEngine.Instance.Volume = 1;
-                    BassEngine.Instance.Play();
-                };
-            //打开音乐失败
-            BassEngine.Instance.OpenFailed += delegate
-                {
-                    if (musicWindow != null)
-                    {
-                        musicWindow.CloseThis();
-                        musicWindow = null;
-                    }
-                };
-
-            //绑定音量设置
-        }
-
-
-        /// <summary>
-        /// Handler for skeleton ready handler.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="e">The event args.</param>
-        private void OnSkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
-        {
-            // Get the frame.
-            using (var frame = e.OpenSkeletonFrame())
-            {
-                // Ensure we have a frame.
-                if (frame != null)
-                {
-                    // Resize the skeletons array if a new size (normally only on first call).
-                    if (this.skeletons.Length != frame.SkeletonArrayLength)
-                    {
-                        this.skeletons = new Skeleton[frame.SkeletonArrayLength];
-                    }
-
-                    // Get the skeletons.
-                    frame.CopySkeletonDataTo(this.skeletons);
-
-                    // Assume no nearest skeleton and that the nearest skeleton is a long way away.
-                    var newNearestId = -1;
-                    var nearestDistance2 = double.MaxValue;
-
-                    // Look through the skeletons.
-                    foreach (var skeleton in this.skeletons)
-                    {
-                        // Only consider tracked skeletons.
-                        if (skeleton.TrackingState == SkeletonTrackingState.Tracked)
-                        {
-                            // Find the distance squared.
-                            var distance2 = (skeleton.Position.X*skeleton.Position.X) +
-                                            (skeleton.Position.Y*skeleton.Position.Y) +
-                                            (skeleton.Position.Z*skeleton.Position.Z);
-
-                            // Is the new distance squared closer than the nearest so far?
-                            if (distance2 < nearestDistance2)
-                            {
-                                // Use the new values.
-                                newNearestId = skeleton.TrackingId;
-                                nearestDistance2 = distance2;
-                            }
-                            gestureController.UpdateAllGestures(skeleton);
-                            if (detialWindow != null)
-                            {
-                                if (CheckIfShowHand(skeleton))
-                                {
-                                    detialWindow.SetHandLeftPoint(CalcScreenPoint(skeleton, JointType.HandLeft));
-                                    detialWindow.SetHandRightPoint(CalcScreenPoint(skeleton, JointType.HandRight));
-                                }
-                            }
-                        }
-                    }
-
-                    if (this.nearestId != newNearestId)
-                    {
-                        this.nearestId = newNearestId;
-                    }
-                    // Pass skeletons to recognizer.
-                    this.activeRecognizer.Recognize(sender, frame, this.skeletons);
-                    this.DrawStickMen(this.skeletons);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Select a skeleton to be highlighted.
-        /// </summary>
-        /// <param name="skeleton">The skeleton</param>
-        private void HighlightSkeleton(Skeleton skeleton)
-        {
-            // Set the highlight time to be a short time from now.
-            this.highlightTime = DateTime.UtcNow + TimeSpan.FromSeconds(0.5);
-            // Record the ID of the skeleton.
-            this.highlightId = skeleton.TrackingId;
-        }
-
-        /// <summary>
-        /// Draw stick men for all the tracked skeletons.
-        /// </summary>
-        /// <param name="skeletons">The skeletons to draw.</param>
-        private void DrawStickMen(Skeleton[] skeletons)
-        {
-            // Remove any previous skeletons.
-            StickMen.Children.Clear();
-            foreach (var skeleton in skeletons)
-            {
-                // Only draw tracked skeletons.
-                if (skeleton.TrackingState == SkeletonTrackingState.Tracked)
-                {
-                    // Draw a background for the next pass.
-                    this.DrawStickMan(skeleton, Brushes.WhiteSmoke, 7);
-                }
-            }
-
-            foreach (var skeleton in skeletons)
-            {
-                // Only draw tracked skeletons.
-                if (skeleton.TrackingState == SkeletonTrackingState.Tracked)
-                {
-                    // Pick a brush, Red for a skeleton that has recently gestures, black for the nearest, gray otherwise.
-                    var brush = DateTime.UtcNow < this.highlightTime && skeleton.TrackingId == this.highlightId
-                                    ? Brushes.Red
-                                    : skeleton.TrackingId == this.nearestId ? Brushes.Black : Brushes.Gray;
-
-                    // Draw the individual skeleton.
-                    this.DrawStickMan(skeleton, brush, 3);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Draw an individual skeleton.
-        /// </summary>
-        /// <param name="skeleton">The skeleton to draw.</param>
-        /// <param name="brush">The brush to use.</param>
-        /// <param name="thickness">This thickness of the stroke.</param>
-        private void DrawStickMan(Skeleton skeleton, Brush brush, int thickness)
-        {
-            Debug.Assert(skeleton.TrackingState == SkeletonTrackingState.Tracked, "The skeleton is being tracked.");
-
-            foreach (var run in SkeletonSegmentRuns)
-            {
-                var next = this.GetJointPoint(skeleton, run[0]);
-                for (var i = 1; i < run.Length; i++)
-                {
-                    var prev = next;
-                    next = this.GetJointPoint(skeleton, run[i]);
-
-                    var line = new Line
-                        {
-                            Stroke = brush,
-                            StrokeThickness = thickness,
-                            X1 = prev.X,
-                            Y1 = prev.Y,
-                            X2 = next.X,
-                            Y2 = next.Y,
-                            StrokeEndLineCap = PenLineCap.Round,
-                            StrokeStartLineCap = PenLineCap.Round
-                        };
-
-                    StickMen.Children.Add(line);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Convert skeleton joint to a point on the StickMen canvas.
-        /// </summary>
-        /// <param name="skeleton">The skeleton.</param>
-        /// <param name="jointType">The joint to project.</param>
-        /// <returns>The projected point.</returns>
-        private Point GetJointPoint(Skeleton skeleton, JointType jointType)
-        {
-            var joint = skeleton.Joints[jointType];
-
-            // Points are centered on the StickMen canvas and scaled according to its height allowing
-            // approximately +/- 1.5m from center line.
-            var point = new Point
-                {
-                    X = (StickMen.Width/2) + (StickMen.Height*joint.Position.X/3),
-                    Y = (StickMen.Width/2) - (StickMen.Height*joint.Position.Y/3)
-                };
-
-            return point;
-        }
-
-
-        private void RegisterGestures()
-        {
-            // define the gestures for the demo
-            IRelativeGestureSegment[] joinedhandsSegments = new IRelativeGestureSegment[20];
-            JoinedHandsSegment1 joinedhandsSegment = new JoinedHandsSegment1();
-            for (int i = 0; i < 20; i++)
-            {
-                // gesture consists of the same thing 10 times 
-                joinedhandsSegments[i] = joinedhandsSegment;
-            }
-            gestureController.AddGesture("JoinedHands", joinedhandsSegments);
-
-            IRelativeGestureSegment[] menuSegments = new IRelativeGestureSegment[15];
-            MenuSegment1 menuSegment = new MenuSegment1();
-            for (int i = 0; i < 15; i++)
-            {
-                // gesture consists of the same thing 20 times 
-                menuSegments[i] = menuSegment;
-            }
-            gestureController.AddGesture("Menu", menuSegments);
-
-            IRelativeGestureSegment[] zoomInSegments = new IRelativeGestureSegment[3];
-            zoomInSegments[0] = new ZoomSegment1();
-            zoomInSegments[1] = new ZoomSegment2();
-            zoomInSegments[2] = new ZoomSegment3();
-            gestureController.AddGesture("ZoomIn", zoomInSegments);
-
-            IRelativeGestureSegment[] zoomOutSegments = new IRelativeGestureSegment[3];
-            zoomOutSegments[0] = new ZoomSegment3();
-            zoomOutSegments[1] = new ZoomSegment2();
-            zoomOutSegments[2] = new ZoomSegment1();
-            gestureController.AddGesture("ZoomOut", zoomOutSegments);
-
-            IRelativeGestureSegment[] pullSegment = new IRelativeGestureSegment[2];
-            pullSegment[0] = new PullAndPush3();
-            pullSegment[1] = new PullAndPush4();
-            gestureController.AddGesture("Pull", pullSegment);
-
-            IRelativeGestureSegment[] pushSegment = new IRelativeGestureSegment[2];
-            pushSegment[0] = new PullAndPush5();
-            pushSegment[1] = new PullAndPush3();
-            gestureController.AddGesture("Push", pushSegment);
-
-
-            IRelativeGestureSegment[] pullLeftSegment = new IRelativeGestureSegment[2];
-            pullLeftSegment[0] = new PullAndPush6();
-            pullLeftSegment[1] = new PullAndPush7();
-            gestureController.AddGesture("PullLeft", pullLeftSegment);
-
-            IRelativeGestureSegment[] pushLeftSegment = new IRelativeGestureSegment[2];
-            pushLeftSegment[0] = new PullAndPush8();
-            pushLeftSegment[1] = new PullAndPush6();
-            gestureController.AddGesture("PushLeft", pushLeftSegment);
-        }
-
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e">Gesture event arguments.</param>
-        private void OnGestureRecognized(object sender, GestureEventArgs e)
-        {
-            switch (e.GestureName)
-            {
-                case "Menu":
-                    if (detialWindow == null && musicWindow == null && videoWindow == null)
-                    {
-                        HighLightStickMan();
-                        this.CloseThis();
-                    }
-                    break;
-                case "JoinedHands":
-                    if (detialWindow == null)
-                    {
-                        if (musicWindow != null)
-                        {
-                            HighLightStickMan();
-                            musicWindow.ChangeStatue();
-                        }
-                        else
-                        {
-                            HighLightStickMan();
-                            videoWindow.ChangeStatue();
-                        }
-                    }
-                    break;
-                case "ZoomIn":
-                    //Gesture = "Zoom In";
-                    if (detialWindow == null && musicWindow == null && videoWindow == null)
-                    {
-                        HighLightStickMan();
-                        this.Close();
-                    }
-                    break;
-                case "ZoomOut":
-                    //Gesture = "Zoom Out";              
-                    break;
-                case "Pull":
-                case "PullLeft":
-                    if (detialWindow == null && musicWindow == null && videoWindow == null)
-                    {
-                        HighLightStickMan();
-                        OpenSubWindow();
-                    }
-                    break;
-                case "Push":
-                case "PushLeft":
-                    if (detialWindow != null || musicWindow != null || videoWindow != null)
-                    {
-                        HighLightStickMan();
-                        if (detialWindow != null)
-                        {
-                            detialWindow.CloseThis();
-                            detialWindow = null;
-                        }
-                        else if (musicWindow != null)
-                        {
-                            musicWindow.CloseThis();
-                            musicWindow = null;
-                        }
-                        else
-                        {
-                            videoWindow.CloseThis();
-                            videoWindow = null;
-                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-            //_clearTimer.Start();
-        }
-
-        private void HighLightStickMan()
-        {
-            for (int i = 0; i < skeletons.Length; i++)
-            {
-                if (skeletons[i].TrackingId == nearestId)
-                    HighlightSkeleton(skeletons[i]);
-            }
-        }
-
-
-        /// <summary>
-        /// 根据显示分辨率与彩色图像帧的分辨率的比例，来调整显示坐标
-        /// </summary>
-        /// <param name="joint"></param>
-        /// <returns></returns>
-        private Point TransferSkeletonPoint(Joint joint)
-        {
-            ColorImagePoint colorPoint = mapper.MapSkeletonPointToColorPoint(joint.Position, nui.ColorStream.Format);
-            double xScaleRate = (SystemParameters.PrimaryScreenWidth)/640;
-            double yScaleRate = (SystemParameters.PrimaryScreenHeight)/480;
-
-            double x = (double) colorPoint.X;
-            x *= xScaleRate;
-            double y = (double) colorPoint.Y;
-            y *= yScaleRate;
-
-            return new Point((int) x, (int) y);
-        }
-
-        private Point CalcScreenPoint(Skeleton skeleton, JointType type)
-        {
-            double adj = type == JointType.HandLeft ? 0.28 : 0.12;
-            Joint jointHand = skeleton.Joints[type];
-            Joint jointShoulderCenter = skeleton.Joints[JointType.ShoulderCenter];
-            float x = jointHand.Position.X - jointShoulderCenter.Position.X; //hX - sX;
-            float y = jointShoulderCenter.Position.Y - jointHand.Position.Y; //sY - hY;
-            return
-                new Point(
-                    (int) ((x + adj)/0.35*SystemParameters.PrimaryScreenWidth - SystemParameters.PrimaryScreenWidth/2),
-                    (int) (y/0.35*SystemParameters.PrimaryScreenHeight) - SystemParameters.PrimaryScreenHeight/2);
-        }
-
-
-        private bool CheckIfShowHand(Skeleton skeleton)
-        {
-            if (skeleton.Joints[JointType.HandLeft].Position.Y > skeleton.Joints[JointType.HipLeft].Position.Y &&
-                skeleton.Joints[JointType.HandRight].Position.Y > skeleton.Joints[JointType.HipRight].Position.Y &&
-                skeleton.Joints[JointType.HandLeft].Position.Z < skeleton.Joints[JointType.ShoulderLeft].Position.Z &&
-                skeleton.Joints[JointType.HandRight].Position.Z < skeleton.Joints[JointType.ShoulderRight].Position.Z
-                )
-            {
-                HighLightStickMan();
-                return true;
-            }
-            detialWindow.timerTrans.Stop();
-            return false;
-        }
-
-
         private void CloseThis()
         {
-            stdEnd = (Storyboard) this.Resources["sb_end"];
-            stdEnd.Completed += (a, b) => { this.Close(); };
-            stdEnd.Begin();
-            if (leapMotinn != null)
-            {
-                leapMotinn.Close();
-            }
-                //var datWth = new DoubleAnimation(SystemParameters.PrimaryScreenWidth, 1, new Duration(TimeSpan.FromMilliseconds(700)));
-            //var datHig = new DoubleAnimation(SystemParameters.FullPrimaryScreenHeight, 1, new Duration(TimeSpan.FromMilliseconds(700)));
+            _stdEnd = (Storyboard) Resources["sb_end"];
+            _stdEnd.Completed += (a, b) => Close();
+            _stdEnd.Begin();
 
-            //this.BeginAnimation(MainWindow.WidthProperty, datWth);
-            //this.BeginAnimation(MainWindow.HeightProperty, datHig);
+            _leapHelper.Close();
+
+            _kinectHelper.Close();
         }
+
+        #endregion
     }
 }

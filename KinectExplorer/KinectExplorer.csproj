@@ -81,19 +81,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\Coding4Fun.Kinect.Wpf.dll</HintPath>
     </Reference>
-    <Reference Include="LeapCSharp.NET4.0">
+    <Reference Include="LeapCSharp.NET4.0, Version=0.0.0.0, Culture=neutral, PublicKeyToken=6e1b1368e71eba9b, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\LeapHelper\LeapCSharp.NET4.0.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Expression.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Coding4Fun.Kinect.Wpf.1.5.0\lib\Microsoft.Expression.Drawing.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Expression.Effects, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Expression.Interactions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Kinect, Version=1.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.QualityTools.Testing.Fakes, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.Samples.Kinect.SwipeGestureRecognizer">
-      <HintPath>.\Microsoft.Samples.Kinect.SwipeGestureRecognizer.dll</HintPath>
-    </Reference>
     <Reference Include="PresentationCore">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
@@ -107,10 +101,6 @@
     <Reference Include="Taygeta.Controls, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\Taygeta.Controls.dll</HintPath>
-    </Reference>
-    <Reference Include="Taygeta.Core, Version=1.0.4550.23842, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\Taygeta.Core.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
@@ -208,13 +198,13 @@
       <Project>{021999b4-8c61-45f2-8c4e-80a08fc5ca19}</Project>
       <Name>CustomControlLib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DeviceHelper\DeviceHelper.csproj">
+      <Project>{c7f795fe-c1c2-45cc-8514-d1c01fb93379}</Project>
+      <Name>DeviceHelper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DoubanFM.Bass\MusicPlayer.csproj">
       <Project>{62324cfd-03ff-44b4-9204-66bae86972b6}</Project>
       <Name>MusicPlayer</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Fizbin.Kinect.Gestures\Fizbin.Kinect.Gestures.csproj">
-      <Project>{7471719c-9bd5-42ba-b42b-bb5663eebbc3}</Project>
-      <Name>Fizbin.Kinect.Gestures</Name>
     </ProjectReference>
     <ProjectReference Include="..\FlowComponent\FlowComponent.csproj">
       <Project>{F26592D5-D0C2-4A3B-A520-CC1A2B817AEE}</Project>
@@ -227,10 +217,6 @@
     <ProjectReference Include="..\ID3Edit\Mp3Lib\Mp3Lib.csproj">
       <Project>{e16e2254-a7a2-4e45-95b9-8613c67b3fd4}</Project>
       <Name>Mp3Lib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LeapHelper\LeapHelper.csproj">
-      <Project>{862ed364-e5fb-4be7-8e8f-bfe9d12df13c}</Project>
-      <Name>LeapHelper</Name>
     </ProjectReference>
     <ProjectReference Include="..\VLCVideo\Declarations\Declarations.csproj">
       <Project>{819c4bab-8fd0-463f-bb5f-119731840390}</Project>

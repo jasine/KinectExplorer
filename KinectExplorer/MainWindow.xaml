@@ -5,7 +5,7 @@
 
         xmlns:flow="clr-namespace:FlowComponent;assembly=FlowComponent"
         xmlns:flowComponent="clr-namespace:FlowComponent;assembly=FlowComponent" AllowsTransparency="True"
-        WindowStyle="None" Loaded="Window_Loaded" Icon="6.ico">
+        WindowStyle="None" Loaded="Window_Loaded" Icon="6.ico" >
     <Grid>
         <flowComponent:FlowControl x:Name="flow" Margin="0" Width="500" Height="300">
 

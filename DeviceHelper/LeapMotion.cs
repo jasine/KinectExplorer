@@ -9,8 +9,8 @@ namespace DeviceHelper
     public class LeapHelper
     {
         private LeapListener listener;
-        private Controller controller;
-        public bool IsConnected { get; private set; }
+        private readonly Controller controller;
+        public bool IsConnected { get { return controller.IsConnected; }}
 
         public LeapListener Listener
         {
@@ -20,14 +20,15 @@ namespace DeviceHelper
         public LeapHelper()
         {
             
-            controller = new Controller();           
+            controller = new Controller();              
+        }
+        public void Init()
+        {
             if (controller.IsConnected)
             {
-                IsConnected = true;
-                listener = new LeapListener(); 
+                listener = new LeapListener();
                 controller.AddListener(listener);
             }
-
         }
         
         public void Close()

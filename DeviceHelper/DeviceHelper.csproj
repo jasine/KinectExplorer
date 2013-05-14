@@ -69,10 +69,14 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Fizbin.Kinect.Gestures\Fizbin.Kinect.Gestures.csproj">
+    <ProjectReference Include="..\Fizbin.Kinect.Gestures\GesturesRecognize.csproj">
       <Project>{7471719c-9bd5-42ba-b42b-bb5663eebbc3}</Project>
-      <Name>Fizbin.Kinect.Gestures</Name>
+      <Name>GesturesRecognize</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
+    <None Include="ClassDiagram2.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

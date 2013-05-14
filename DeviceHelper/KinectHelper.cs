@@ -68,6 +68,8 @@ namespace DeviceHelper
         {
             Skeletons=new Skeleton[0];
             NearestId = -1;
+
+            InitializeNui();
             KinectSensor.KinectSensors.StatusChanged += (s, ee) =>
             {
                 switch (ee.Status)

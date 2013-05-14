@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Fizbin.Kinect.Gestures</RootNamespace>
-    <AssemblyName>Fizbin.Kinect.Gestures</AssemblyName>
+    <AssemblyName>GesturesRecognize</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

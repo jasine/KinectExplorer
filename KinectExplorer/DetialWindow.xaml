@@ -8,8 +8,9 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="主窗口"
         ResizeMode="NoResize" WindowStartupLocation="Manual"
-        WindowStyle="None" AllowsTransparency="True"
-        Closing="main_Closing" MouseDown="main_MouseDown" BorderBrush="Pink" BorderThickness="0" ShowInTaskbar="True">
+        WindowStyle="None" AllowsTransparency="True" 
+        
+        Closing="main_Closing"  MouseDown="main_MouseDown" BorderBrush="Pink" BorderThickness="0" ShowInTaskbar="False">
     <Window.Resources>
 
         <ObjectDataProvider MethodName="GetValues" ObjectType="{x:Type sys:Enum}" x:Key="odp">

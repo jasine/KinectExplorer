@@ -13,11 +13,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("CustomControlLib")]
+[assembly: AssemblyTitle("AvalonLib")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Sheva.inc")]
-[assembly: AssemblyProduct("CustomControlLib")]
+[assembly: AssemblyProduct("KinectExplorer")]
 [assembly: AssemblyCopyright("Copyright @ Sheva.inc 2006")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

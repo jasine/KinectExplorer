@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:kControls="clr-namespace:Coding4Fun.Kinect.Wpf.Controls;assembly=Coding4Fun.Kinect.Wpf"
         xmlns:controls="clr-namespace:Sheva.Windows.Controls;assembly=AvalonLib"
+        
         xmlns:cc="http://schemas.sheva.com/wpf"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="主窗口"

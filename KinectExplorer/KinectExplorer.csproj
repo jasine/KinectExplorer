@@ -194,9 +194,9 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CustomControlLib\CustomControlLib.csproj">
+    <ProjectReference Include="..\CustomControlLib\PictureTransition.csproj">
       <Project>{021999b4-8c61-45f2-8c4e-80a08fc5ca19}</Project>
-      <Name>CustomControlLib</Name>
+      <Name>PictureTransition</Name>
     </ProjectReference>
     <ProjectReference Include="..\DeviceHelper\DeviceHelper.csproj">
       <Project>{c7f795fe-c1c2-45cc-8514-d1c01fb93379}</Project>

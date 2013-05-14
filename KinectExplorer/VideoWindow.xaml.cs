@@ -30,14 +30,15 @@ namespace KinectExplorer
         private Storyboard stdStart, stdEnd, stdEnd2, stdVideoFinish;
         public static VideoWindow Instance { get; private set; }
 
-        private string fileName;
+        private string  fileName;
 
         private IMediaPlayerFactory m_factory;
         private IVideoPlayer m_player;
         private IMedia m_media;
 
-        public static VideoWindow GetInstance(FileInfo imgSrc, FileInfo videoSrc)
+        public  static  VideoWindow GetInstance(FileInfo imgSrc, FileInfo videoSrc)
         {
+            
             if (Instance != null)
                 Instance.Close();
             Instance = new VideoWindow(imgSrc, videoSrc);
@@ -133,7 +134,7 @@ namespace KinectExplorer
             m_player.Events.PlayerStopped += new EventHandler(Events_PlayerStopped);
         }
 
-        private void Events_PlayerStopped(object sender, EventArgs e)
+        private  void Events_PlayerStopped(object sender, EventArgs e)
         {
             this.Dispatcher.BeginInvoke(new Action(InitControls));
         }

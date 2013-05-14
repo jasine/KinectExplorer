@@ -77,8 +77,6 @@ namespace KinectExplorer
             Images.ItemsSource = photos;
         }
 
-        public ArrayList arr { get; set; }
-
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // this.Topmost = true;

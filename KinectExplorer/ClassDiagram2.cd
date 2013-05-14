@@ -1,29 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Class Name="KinectExplorer.App">
-    <Position X="0.5" Y="0.5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>App.xaml.cs</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="KinectExplorer.ToTransparentColorConverter" Collapsed="true" BaseTypeListCollapsed="true">
-    <Position X="2.25" Y="2.5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>Coventer.cs</FileName>
-    </TypeIdentifier>
-    <Lollipop Position="0.2" Collapsed="true" />
-  </Class>
   <Class Name="KinectExplorer.DetialWindow">
-    <Position X="2.25" Y="0.5" Width="1.5" />
+    <Position X="9.5" Y="0.5" Width="1.75" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
     <TypeIdentifier>
-      <HashCode>ACwBAACCEBkwEMAgAIAEAoQAjiCgEAAAQIhwAAAgWAI=</HashCode>
+      <HashCode>ACwBAACCEBgwEMAgAIAEAoQADiCgEAAAQIhwAAAgWAI=</HashCode>
       <FileName>DetialWindow.xaml.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="KinectExplorer.MainWindow">
-    <Position X="4" Y="0.5" Width="1.5" />
+    <Position X="4.75" Y="0.5" Width="2.5" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
     <NestedTypes>
       <Class Name="KinectExplorer.MainWindow.FileInfoComparer" Collapsed="true">
         <TypeIdentifier>
@@ -33,64 +24,63 @@
       </Class>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AKcGAWgCAAVYARGAgAAGAAgjlACEAA1UChIGJAhBGAA=</HashCode>
+      <HashCode>AIYGAQgkEAUCABEEEFACAAgCQAAEAA1mCAAABAgRhCA=</HashCode>
       <FileName>MainWindow.xaml.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="KinectExplorer.MusicWindow" Collapsed="true">
-    <Position X="5.75" Y="0.5" Width="1.5" />
+  <Class Name="KinectExplorer.MusicWindow">
+    <Position X="11.5" Y="0.5" Width="1.75" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
     <TypeIdentifier>
-      <HashCode>AAQAAACAAAEQEIIIAIAEAAIABgQAXAAAQUhAACAAFAA=</HashCode>
+      <HashCode>AAQAAQCAAAAAAIYIAEAAAAIEBgQAUAACAEBQiiIABAA=</HashCode>
       <FileName>MusicWindow.xaml.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="KinectExplorer.PathToImage" BaseTypeListCollapsed="true">
-    <Position X="0.5" Y="1.5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>PathToImage.cs</FileName>
-    </TypeIdentifier>
-    <Lollipop Position="0.2" Collapsed="true" />
-  </Class>
   <Class Name="KinectExplorer.PhotoFrame">
-    <Position X="2.25" Y="1.5" Width="1.5" />
+    <Position X="14.75" Y="0.75" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Properties" Collapsed="true" />
+    </Compartments>
     <TypeIdentifier>
       <HashCode>AABAQAAAAAAAAAAAAAAAAAgAAAAAgAAAAAAAAAAAAAA=</HashCode>
       <FileName>PhotoFrame.xaml.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="KinectExplorer.ThumbnailManager" BaseTypeListCollapsed="true">
-    <Position X="0.5" Y="2.5" Width="1.5" />
+    <Position X="2.5" Y="0.75" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
     <TypeIdentifier>
       <HashCode>AACAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAA=</HashCode>
       <FileName>ThumbnailManager.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>
-  <Class Name="KinectExplorer.VideoUnity" Collapsed="true">
-    <Position X="4" Y="2.5" Width="1.5" />
+  <Class Name="KinectExplorer.VideoUnity">
+    <Position X="15" Y="0.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAA=</HashCode>
       <FileName>VideoUnity.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="KinectExplorer.VideoWindow">
-    <Position X="5.75" Y="2.5" Width="1.5" />
+    <Position X="7.5" Y="0.5" Width="1.75" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
     <TypeIdentifier>
       <HashCode>CAYIAACAAAAUEIAAEIAkAAIABgQAUBAQQGhAACQAFAA=</HashCode>
       <FileName>VideoWindow.xaml.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="KinectExplorer.Properties.Resources" Collapsed="true">
-    <Position X="4" Y="1.5" Width="1.5" />
+  <Class Name="KinectExplorer.Properties.Resources">
+    <Position X="0.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAABEAAAAQCAAAAAIAAAAAAAIII=</HashCode>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="KinectExplorer.Properties.Settings">
-    <Position X="5.75" Y="1.5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAABAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
   <Font Name="微软雅黑" Size="9" />

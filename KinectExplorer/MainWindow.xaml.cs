@@ -40,7 +40,8 @@ namespace KinectExplorer
         private volatile MusicWindow _musicWindow;
         private volatile VideoWindow _videoWindow;
 
-        private Storyboard _stdStart, _stdEnd;
+        private readonly Storyboard _stdStart;
+        private Storyboard _stdEnd;
 
         /// <summary>
         /// Time until skeleton ceases to be highlighted.
@@ -94,11 +95,6 @@ namespace KinectExplorer
             slider.Maximum = flow.Count - 1;
 
             Loaded += Window_Loaded;
-        }
-
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
             List<GestureType> gestureses = new List<GestureType>
                 {
                     GestureType.JoinedHands,
@@ -114,8 +110,10 @@ namespace KinectExplorer
             _kinectHelper.SkeletonReady += kinectHelper_SkeletonReady;
             _kinectHelper.GestureDetected += kinectHelper_GestureDetected;
 
+            _leapHelper.Init();
             if (_leapHelper.IsConnected)
             {
+                //_leapHelper.Init();
                 _leapHelper.Listener.LeapSwipeReady += ListenerLeapSwipeReady;
                 _leapHelper.Listener.LeapFingerReady += Listener_LeapFingerReady;
                 _leapHelper.Listener.LeapTapScreenReady += ListenerLeapTapScreenReady;
@@ -128,6 +126,12 @@ namespace KinectExplorer
 
             InitBassEngine(); //初始化播放器
             ChangeFileInfo(); //显示文件信息           
+
+        }
+
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
         }
 
         /// <summary>
@@ -280,7 +284,7 @@ namespace KinectExplorer
 
         private void kinectHelper_SkeletonReady(object sender, Skeleton skeleton)
         {
-            if (CheckIfShowHand(skeleton))
+            if (_detialWindow!=null&&CheckIfShowHand(skeleton))
             {
                 _detialWindow.SetHandLeftPoint(CalcScreenPoint(skeleton, JointType.HandLeft));
                 _detialWindow.SetHandRightPoint(CalcScreenPoint(skeleton, JointType.HandRight));
@@ -535,8 +539,8 @@ namespace KinectExplorer
             }
         }
 
-        private void ListenerLeapSwipeReady(object sender, SwipeType type)
-        {
+        private void ListenerLeapSwipeReady(object sender,SwipeType type)
+        {            
             Action action = null;
             switch (type)
             {

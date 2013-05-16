@@ -126,9 +126,10 @@ namespace KinectExplorer
                 {
                     //stdMiddle.Begin();
                     MusicInfo.Visibility = Visibility.Visible;
-                    var datImg = new DoubleAnimation(0, -1*SystemParameters.PrimaryScreenWidth*0.2,
+                    //MusicInfo.Opacity = 0;
+                    var datImg = new DoubleAnimation(0, -1*SystemParameters.PrimaryScreenWidth*0.23,
                                                      new Duration(TimeSpan.FromMilliseconds(700)));
-                    var datInfo = new DoubleAnimation(0, SystemParameters.PrimaryScreenWidth*0.2,
+                    var datInfo = new DoubleAnimation(0, SystemParameters.PrimaryScreenWidth*0.23,
                                                       new Duration(TimeSpan.FromMilliseconds(700)));
                     var datPrs = new DoubleAnimation(0, 300, new Duration(TimeSpan.FromMilliseconds(2000)));
 

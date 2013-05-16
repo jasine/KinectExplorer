@@ -791,7 +791,7 @@ namespace KinectExplorer
                 }
             }
 
-            _images.Sort(new FileInfoComparer());
+            //_images.Sort(new FileInfoComparer());
             foreach (FileInfo f in _images)
                 flow.Add(Environment.MachineName, f.FullName);
         }

@@ -84,7 +84,7 @@
             <Border BorderBrush="Black" BorderThickness="3" Background="Black" Opacity="0.3" CornerRadius="5">
             </Border>
 
-            <ListBox Margin="5,4,5,4" SelectedIndex="0" Opacity="1" Background="Transparent"
+            <ListBox ScrollViewer.HorizontalScrollBarVisibility="Hidden"  Margin="5,4,5,4" SelectedIndex="0" Opacity="1" Background="Transparent"
                      SelectionChanged="Images_OnSelectionChanged" Name="Images">
                 <ListBox.ItemsSource>
                     <x:Array Type="{x:Type ImageSource}">
@@ -92,6 +92,7 @@
                     </x:Array>
                 </ListBox.ItemsSource>
                 <ListBox.ItemTemplate>
+                    
                     <DataTemplate DataType="{x:Type ImageSource}">
                         <Grid Background="Transparent">
                             <Image Width="90" Height="65" Source="{Binding}" Margin="3" Stretch="UniformToFill" />
@@ -103,6 +104,7 @@
                 </ListBox.ItemTemplate>
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
+                        
                         <VirtualizingStackPanel IsItemsHost="True" Orientation="Horizontal" />
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>

@@ -253,7 +253,7 @@ namespace KinectExplorer
                     }
                     else if (_detialWindow != null)
                     {
-                        _detialWindow.Forword();
+                        _detialWindow.Backword();
                     }
                     else
                     {
@@ -272,7 +272,7 @@ namespace KinectExplorer
                     }
                     else if (_detialWindow != null)
                     {
-                        _detialWindow.Backword();
+                        _detialWindow.Forword();
                     }
                     else
                     {

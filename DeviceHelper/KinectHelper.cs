@@ -239,9 +239,9 @@ namespace DeviceHelper
                 gestureController.GestureRecognized += OnGestureRecognized;
                 if (gestureList.Contains(GestureType.JoinedHands))
                 {
-                    IRelativeGestureSegment[] joinedhandsSegments = new IRelativeGestureSegment[20];
+                    IRelativeGestureSegment[] joinedhandsSegments = new IRelativeGestureSegment[15];
                     JoinedHandsSegment1 joinedhandsSegment = new JoinedHandsSegment1();
-                    for (int i = 0; i < 20; i++)
+                    for (int i = 0; i < 15; i++)
                     {
                         // gestureType consists of the same thing 10 times 
                         joinedhandsSegments[i] = joinedhandsSegment;

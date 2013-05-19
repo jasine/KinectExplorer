@@ -86,6 +86,10 @@ namespace DeviceHelper
             }
 
             // Get gestures
+
+
+
+
             
             GestureList gestures = frame.Gestures();
             for (int i = 0; i < gestures.Count; i++)
@@ -118,12 +122,12 @@ namespace DeviceHelper
                                 if (swipe.Direction.x < -0.5)
                                 {
                                     LeapSwipeReady(this, SwipeType.SwipeLeft);
-                                    lastTime = DateTime.Now;
+                                    //lastTime = DateTime.Now;
                                 }
                                 else if (swipe.Direction.x > 0.5)
                                 {
                                     LeapSwipeReady(this, SwipeType.SwipeRight);
-                                    lastTime = DateTime.Now;
+                                    //lastTime = DateTime.Now;
                                 }
                             //}
                             

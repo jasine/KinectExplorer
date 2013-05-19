@@ -33,9 +33,16 @@ namespace DeviceHelper
         
         public void Close()
         {
-            if(listener!=null)
-                controller.RemoveListener(listener);
-            controller.Dispose();
+            try
+            {
+                if (listener != null)
+                    controller.RemoveListener(listener);
+                controller.Dispose();
+            }
+            catch
+            {
+              
+            }
         }
     }
 }

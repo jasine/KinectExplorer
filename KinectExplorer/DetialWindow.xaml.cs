@@ -87,7 +87,7 @@ namespace KinectExplorer
             }
             else if (this.Width < 1300 && this.Width > 1000)
             {
-                size = SystemParameters.PrimaryScreenWidth * 0.3;
+                size = SystemParameters.PrimaryScreenWidth * 0.415;
             }
 
             //gd.Background =  new ImageBrush(img);

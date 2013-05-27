@@ -52,16 +52,16 @@
         </Grid>
 
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Orientation="Horizontal" Margin="0,0,0,-5">
-            <ProgressBar Opacity="0.9" Width="0" Name="process" Value="0" Height="10" VerticalAlignment="Bottom"
+            <ProgressBar Opacity="0.9" Width="0" Name="process" Value="0" Height="13" VerticalAlignment="Bottom"
                          HorizontalAlignment="Center" Margin="25,9" Foreground="White" Background="Black"
                          MouseDown="process_MouseDown">
                 <ProgressBar.BorderBrush>
                     <SolidColorBrush Color="White"></SolidColorBrush>
                 </ProgressBar.BorderBrush>
             </ProgressBar>
-            <Label Name="TimeNow" Foreground="White" FontSize="15"></Label>
-            <Label Name="TimeSplit" Visibility="Hidden" Foreground="White" FontSize="15">/</Label>
-            <Label Name="TimeTotal" Foreground="White" FontSize="15"></Label>
+            <Label Name="TimeNow" Foreground="White" FontSize="20"></Label>
+            <Label Name="TimeSplit" Visibility="Hidden" Foreground="White" FontSize="20">/</Label>
+            <Label Name="TimeTotal" Foreground="White" FontSize="20"></Label>
         </StackPanel>
     </Grid>
 </Window>

@@ -126,6 +126,7 @@ namespace KinectExplorer
 
             InitBassEngine(); //初始化播放器
             ChangeFileInfo(); //显示文件信息           
+            
 
         }
 
@@ -555,7 +556,7 @@ namespace KinectExplorer
                     }
                     else if (_detialWindow != null)
                     {
-                        action = () => _detialWindow.Backword();
+                        action = () => _detialWindow.Forword();
                     }
                     else
                     {
@@ -574,7 +575,7 @@ namespace KinectExplorer
                     }
                     else if (_detialWindow != null)
                     {
-                        action = () => _detialWindow.Forword();
+                        action = () => _detialWindow.Backword();
                     }
                     else
                     {
@@ -633,18 +634,20 @@ namespace KinectExplorer
                 {
                     BassEngine.Instance.OpenFile(info.FullName);
                     _musicWindow = MusicWindow.GetInstance(_images[_currentIndex]);
+                    _musicWindow.Closing += (a, b) => _musicWindow = null;
                     _musicWindow.Show();
                 }
                 else
                 {
                     _videoWindow = VideoWindow.GetInstance(_images[_currentIndex], info);
-                    //new VideoWindow(images[currentIndex],info);
+                    _videoWindow.Closing += (a, b) => _videoWindow = null;
                     _videoWindow.Show();
                 }
             }
             else
             {
                 _detialWindow = DetialWindow.GetInstance(_images[_currentIndex]);
+                _detialWindow.Closing += (a, b) => _detialWindow = null;
                 _detialWindow.Show();
             }
         }
@@ -872,6 +875,13 @@ namespace KinectExplorer
         /// </summary>
         private void CloseThis()
         {
+            if (_detialWindow != null)
+                _detialWindow.CloseThis();
+            if (_musicWindow != null)
+                _musicWindow.CloseThis();
+            if (_videoWindow != null)
+                _videoWindow.CloseThis();
+
             _stdEnd = (Storyboard) Resources["sb_end"];
             _stdEnd.Completed += (a, b) => Close();
             _stdEnd.Begin();

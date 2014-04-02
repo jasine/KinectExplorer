@@ -23,6 +23,8 @@
 * 引用了[ffmpeg](http://www.ffmpeg.org/‎)截取视频缩略图
 
 * 引用TransitionControlDemo中的图片切换效果(来源与Internet,出处不详)
+
+
 [更多信息](http://blog.jasine.net/project)
 
 Contact &nbsp;E-mail:[jasinechen@gmail.com](mailto://jasinechen@gmail.com) &nbsp;   Twitter: [@jasinechen](https://twitter.com/jasinechen) &nbsp; Weibo: [@jasine](http://weibo.com/jasne/)

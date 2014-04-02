@@ -18,9 +18,9 @@
 
 * 引用TransitionControlDemo中的图片切换效果(来源与Internet,出处不详)
 
-[!http://dn-jasine.qbox.me/wp-content/gallery/kinectexplorer/ke_5.png]
-[!http://dn-jasine.qbox.me/wp-content/gallery/kinectexplorer/ke_4.png]
-[!http://dn-jasine.qbox.me/wp-content/gallery/kinectexplorer/ke_3.png]
+[!a](http://dn-jasine.qbox.me/wp-content/gallery/kinectexplorer/ke_5.png)
+[!b](http://dn-jasine.qbox.me/wp-content/gallery/kinectexplorer/ke_4.png)
+[!c](http://dn-jasine.qbox.me/wp-content/gallery/kinectexplorer/ke_3.png)
 
 
 Contact &nbsp;E-mail:[jasinechen@gmail.com](mailto://jasinechen@gmail.com) &nbsp;   Twitter: [@jasinechen](https://twitter.com/jasinechen) &nbsp; Weibo: [@jasine](http://weibo.com/jasne/)
